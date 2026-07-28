@@ -1,83 +1,150 @@
-# Spotter
+# 🔎 Spotter
 
-Instant file search for Windows.
+Find any file on your PC before you finish typing its name.
 
-Spotter reads the NTFS master file table directly instead of walking folders, so it does not
-crawl, does not maintain a background service, and does not need a warm-up before it is useful.
-Type, and results are there.
+Windows Search crawls your disks in the background, misses things, and still makes you wait.
+Spotter reads the NTFS master file table directly — the index the filesystem already keeps — so
+there is no crawler, no background service, and no waiting for it to "catch up". Every file on
+every drive, one keystroke away.
 
-    8 drives indexed in 54 seconds
-    855 results for "notepad" in 228 ms
+---
 
-## What it does
+## Why Spotter?
 
-- **Search as you type**, or on demand — one setting, and the button appears when you turn the
-  live search off.
-- **Name, folder and size filters**, each with its own case and regular-expression switches,
-  because the combinations matter: a case-sensitive name inside a loosely matched folder is a
-  different search from the reverse.
-- **Folder sizes and contents**, counted while indexing runs, so a folder row shows what is
-  actually inside it.
-- **Six languages** — English, Arabic, German, Hebrew, Russian, Spanish — two of them right to
-  left, laid out properly rather than mirrored badly.
-- Recent searches, column sorting in natural order (`file2` before `file10`), CSV and text
-  export, delete to Recycle Bin, drag-and-drop out to Explorer, a global hotkey, an optional
-  tray icon that is **off** by default.
+- **It is genuinely instant.** 8 drives read in 54 seconds at startup, then 855 results for
+  `notepad` in **228 ms**. Not "fast for a search tool" — fast enough that you keep typing and
+  the list keeps up.
+- **It closes when you close it.** No tray icon by default, no process left holding your drives.
+  Click X and it is gone, so removing a USB stick still works.
+- **It tells you where it keeps things.** Options lists every file and scheduled task it creates
+  on your PC, with a button to open each one and to remove them.
+- **It speaks your language.** Six of them, including Hebrew and Arabic laid out properly right
+  to left — not a mirrored English window.
 
-Closing the window closes the program. It holds a raw handle on every volume while it runs, so
-leaving it alive in the background would block things like safely removing a USB drive.
+---
 
-## Requirements
+## ✨ Features
 
-Windows 10 1809 or later, x64, and the **.NET 8 Desktop Runtime** for the default build.
+🔍 **Search as you type** • 📁 **Filter by name, folder and size** • 🔤 **Per-field case & regex**
+• 📏 **Real size grammar** (`> 50 MB`, `~1 GB`, `100 MB To 1 GB`) • 📂 **Folder sizes and contents**
+• 🕘 **Recent searches** • ↕️ **Natural sorting** (`file2` before `file10`) • 📤 **CSV & text export**
+• 🗑️ **Delete to Recycle Bin** • 🖱️ **Drag results into any app** • ⌨️ **Global hotkey**
+• 🌍 **6 languages, 2 right-to-left** • 🌗 **Follows your Windows theme**
 
-Reading the file table needs administrator rights. Spotter asks once, then registers a scheduled
-task for that executable's path so later launches from the same place start without a prompt.
-**Options → What this app stores on your PC** lists every file and task it creates, with a button
-to open each one and to remove the task.
+### A few worth explaining
 
-## Building
+**Folder sizes.** Folders show what is actually inside them — total bytes, file count, subfolder
+count — because the index adds every file to its parents as it reads. A size filter therefore
+matches folders too.
 
-    build-debug.bat        debug build, symbols, no optimisation
-    publish.bat            release build - needs the .NET 8 Desktop Runtime on the target PC
-    publish.bat full       one self-contained exe, runs on any Windows x64
+**Per-field options.** Case sensitivity and regular expressions belong to the *field*, not the
+search. A case-sensitive filename inside a loosely matched folder is a different question from
+the reverse, and both are one click away.
 
-Or directly:
+**It tells you when a filter is wrong.** A broken regular expression or an unparseable size turns
+that field red and says why, instead of quietly returning zero results that look exactly like
+"nothing matched".
 
-    dotnet build src\Spotter\Spotter.csproj -c Debug
+---
 
-### The search engine is not in this repository
+## 📸 Screenshot
 
-`src\Spotter` is the application: the window, the search plumbing, the localisation, the
-settings. That is what is published here.
+![Spotter](docs/screenshot.png)
 
-The file-table reader it links against lives in `engine\`, which is excluded by `.gitignore`.
-**A fresh clone will not build until that project exists** — `Spotter.csproj` has a
-`ProjectReference` to `..\..\engine\Core\Spotter.Core.csproj`, and without it the build stops
-with a missing-project error rather than anything mysterious.
+---
 
-If you are reading this on GitHub and want a working build, you will need to supply an engine of
-your own behind the same small surface: a type that starts indexing, reports progress per volume,
-runs a compiled query, and streams results back. `SearchEngine.cs` is the entire boundary — it is
-one file, and it is the only place in the app that knows what the engine looks like.
+## 📋 Requirements
 
-## Running it
+**To run**
+- Windows 10 (1809) or 11, 64-bit
+- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) — or grab the
+  self-contained build, which needs nothing
+- Administrator rights: reading the file table needs a raw volume handle. Spotter asks once, then
+  registers a scheduled task so later launches from the same folder start without a prompt.
 
-    Spotter.exe
+**To build**
+- .NET 8 SDK
+- A search engine — see below
 
-    Spotter.exe --demo 250000   synthetic rows; no admin, no engine, for exercising the UI
-    Spotter.exe --noelevate     stay an ordinary process, so it can be focused and killed normally
-    Spotter.exe --lang he       force a language for one run without changing the saved setting
-    Spotter.exe --search TERM   preload the search box at startup
-    Spotter.exe --bench N       re-run the startup query N more times and log each
+---
 
-Developer notes, design decisions and the measurements behind them are in
-[src/Spotter/README.md](src/Spotter/README.md).
+## 🚀 Getting Started
 
-## Licence
+```bash
+# Debug build with symbols
+build-debug.bat
 
-Copyright (C) 2026. All rights reserved unless a licence file says otherwise.
+# Release build (needs the .NET 8 Desktop Runtime on the target PC)
+publish.bat
 
-If you want people to be able to use, copy or contribute to this, add a licence — without one,
-the default is that nobody may do any of those things. `MIT` is the usual choice for something
-like this; drop the text in a `LICENSE` file at the root and GitHub will pick it up.
+# One self-contained exe that runs on any Windows x64
+publish.bat full
+```
+
+Then just start typing. Useful switches while developing:
+
+```bash
+Spotter.exe --demo 250000   # fake rows: no admin, no engine, for exercising the UI
+Spotter.exe --noelevate     # stay an ordinary process, so it can be focused and killed normally
+Spotter.exe --lang he       # force a language for one run without changing the saved setting
+Spotter.exe --search TERM   # preload the search box
+Spotter.exe --bench 3       # re-run the startup query and log how long each pass took
+```
+
+---
+
+## ⚠️ The search engine is not in this repository
+
+`src/Spotter` is the application — the window, the search plumbing, the six languages, the
+settings. That is what lives here, and it is what the licence covers.
+
+The component that actually reads the file table sits in `engine/`, which is excluded by
+`.gitignore`. **A fresh clone will not build until that project exists**: `Spotter.csproj` has a
+`ProjectReference` to `..\..\engine\Core\Spotter.Core.csproj`, so the build stops with a
+missing-project error rather than anything mysterious.
+
+To build it yourself, supply an engine behind the same small surface — start indexing, report
+progress per volume, run a compiled query, stream results back. [`SearchEngine.cs`](src/Spotter/SearchEngine.cs)
+is the entire boundary. It is one file, and it is the only place in the app that knows what the
+engine looks like.
+
+---
+
+## 🛠️ Tech Stack
+
+- **WPF** on **.NET 8**, with [WPF-UI](https://github.com/lepoco/wpfui) for Fluent styling and a
+  Mica backdrop
+- **Virtualized results** — rows are built on demand and capped, so a million-row result set
+  costs the same as a hundred
+- **Staged updates** — the engine answers on its own threads by the hundred thousand; results are
+  queued and drained on a timer instead of being marshalled one at a time
+- **Compiled localization** — six plain dictionaries in the executable, no satellite assemblies,
+  no folders beside the exe
+- Settings in `%APPDATA%\Spotter`, logs in `%LOCALAPPDATA%\Spotter`
+
+Design decisions, the measurements behind them, and the mistakes found along the way are written
+up in [src/Spotter/README.md](src/Spotter/README.md).
+
+---
+
+## 🗺️ Ideas for later
+
+- 🔤 Search inside file contents
+- 🖼️ Preview pane
+- 📌 Saved searches
+- 🌐 More languages
+
+---
+
+## 📄 License
+
+Licensed under the [Apache License 2.0](LICENSE) — use it, change it, ship it, including
+commercially, as long as you keep the notice and state what you changed.
+
+---
+
+## 👤 Author
+
+Made by **[ori-halevi](https://github.com/ori-halevi)**.
+
+Contributions, ideas, and issues are welcome.

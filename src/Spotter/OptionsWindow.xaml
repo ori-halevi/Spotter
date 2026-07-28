@@ -4,6 +4,7 @@
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:loc="clr-namespace:Spotter.Localization"
                  Title="{loc:Loc Options.Title}"
+                 Icon="pack://application:,,,/spotter.ico"
                  Width="560" Height="820" MinWidth="460" MinHeight="420"
                  ResizeMode="CanResize"
                  WindowBackdropType="Mica"

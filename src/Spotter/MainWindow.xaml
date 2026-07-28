@@ -5,6 +5,7 @@
                  xmlns:local="clr-namespace:Spotter"
                  xmlns:loc="clr-namespace:Spotter.Localization"
                  Title="Spotter"
+                 Icon="pack://application:,,,/spotter.ico"
                  Width="1200" Height="720"
                  MinWidth="720" MinHeight="420"
                  WindowBackdropType="Mica"
@@ -274,7 +275,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="Spotter" Icon="{x:Null}" />
+        <!-- Icon was explicitly nulled here, which is why the app showed one in the taskbar but
+             nowhere inside its own chrome. -->
+        <ui:TitleBar Grid.Row="0" Title="Spotter">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
 
         <!-- Query -->
         <Grid Grid.Row="1" Margin="16,4,16,8">

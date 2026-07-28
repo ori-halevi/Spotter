@@ -1,10 +1,14 @@
-# MasterSeeker — new WPF shell
+# Spotter — developer notes
 
 **Version 2.0.0.**
 
-A ground-up replacement for the 2014 WinForms UI, on .NET 8 with
-[WPF-UI](https://github.com/lepoco/wpfui) for Fluent styling and a Mica backdrop. It drives the
-original search engine unchanged, through `MasterSeeker.Core`.
+Design decisions, the measurements behind them, and the mistakes found along the way. The
+user-facing introduction is in the [repository README](../../README.md).
+
+Spotter is a .NET 8 WPF application using [WPF-UI](https://github.com/lepoco/wpfui) for Fluent
+styling and a Mica backdrop. It talks to the file-table engine through one file,
+[`SearchEngine.cs`](SearchEngine.cs), and to nothing else in `Spotter.Core` — that boundary is
+deliberate and worth keeping.
 
 ## Requirements
 
@@ -13,14 +17,14 @@ build: without the runtime installed, launching it produces a Windows dialog off
 it. To ship something that runs anywhere with no prerequisite, publish self-contained instead —
 about 150 MB rather than 7:
 
-    dotnet publish Wpf/MasterSeeker.Wpf.csproj -c Release -r win-x64 --self-contained
+    dotnet publish src/Spotter/Spotter.csproj -c Release -r win-x64 --self-contained
 
 Long paths are declared in the manifest, so results whose full path is over 260 characters can be
 opened, deleted and inspected rather than merely listed.
 
 ## Running it
 
-    Wpf/bin/Release/net8.0-windows/MasterSeeker.exe
+    bin/Release/net8.0-windows/Spotter.exe
 
 Reading the MFT needs a raw volume handle, which needs administrator, so the app relaunches
 itself elevated. The manifest stays `asInvoker` rather than `requireAdministrator` — see
@@ -31,18 +35,18 @@ elsewhere and that copy prompts once and registers its own, so the app stays por
 If elevation is declined the window still opens, says so in the status bar, and offers **Restart
 as administrator**.
 
-    MasterSeeker.exe --noelevate
+    Spotter.exe --noelevate
 
 Runs as an ordinary process. Drive reads then fail, but the window can be focused, driven with
 synthetic input and killed from a normal developer shell, none of which an elevated one allows.
 
-    MasterSeeker.exe --demo 250000
+    Spotter.exe --demo 250000
 
 Development scaffolding. Fills the grid with synthetic rows so the list, icons, sorting and
 selection can be exercised with no admin rights and no engine. The `Path` column stays blank in
 this mode because path resolution walks the live index and there isn't one.
 
-    MasterSeeker.exe --lang he
+    Spotter.exe --lang he
 
 Forces a language for one run without touching the saved setting, which is what makes a
 right-to-left layout inspectable — `--demo --lang he` gives an unelevated, screenshottable Hebrew
@@ -238,7 +242,7 @@ capture, not the app.
 
 ## Diagnostics
 
-`%LOCALAPPDATA%\DxCK\MasterSeeker\MasterSeeker.Wpf.log`. Records indexing time, the volumes found
+`%LOCALAPPDATA%\Spotter\Spotter.log`. Records indexing time, the volumes found
 and every completed search with its result count and duration. It is how an elevated run gets
 observed, because an ordinary process cannot drive one: UIPI blocks input injection into a
 higher-integrity window, and `SetForegroundWindow` is refused. (Screen *capture* does work — the
@@ -325,15 +329,15 @@ Three things that also mattered:
 elevated runs need no UAC click:
 
     $s = New-Object -ComObject Schedule.Service; $s.Connect()
-    $s.GetFolder('\').GetTask('MasterSeeker.DevElevation').Run('--search notepad --bench 3')
-    Stop-ScheduledTask -TaskName 'MasterSeeker.DevElevation'   # also kills the elevated instance
+    $s.GetFolder('\').GetTask('Spotter.DevElevation').Run('--search notepad --bench 3')
+    Stop-ScheduledTask -TaskName 'Spotter.DevElevation'   # also kills the elevated instance
 
 It is a standing elevated entry point for an executable under the user profile, so anything
 running as that user could replace the file. Remove with
-`Unregister-ScheduledTask -TaskName 'MasterSeeker.DevElevation' -Confirm:$false`.
+`Unregister-ScheduledTask -TaskName 'Spotter.DevElevation' -Confirm:$false`.
 
 `ElevationTask.cs` since does the same thing for ordinary use, under a name derived from the
-executable's path (`MasterSeeker.Shell.<md5-of-path>`). The script is still the way to start an
+executable's path (`Spotter.<md5-of-path>`). The script is still the way to start an
 elevated run *with arguments* from a script, which is what `--bench` measuring needs; the app's
 own task always launches with none. Both carry the same trade-off — remove either the same way.
 
@@ -396,10 +400,10 @@ selected in Explorer:
 
 | | |
 |---|---|
-| Settings | `%APPDATA%\DxCK\MasterSeeker\wpf-settings.xml` |
-| App log | `MasterSeeker.Wpf.log`, beside the exe |
-| Engine log | `MasterSeekerLog.txt` + rotated `MasterSeekerLog.N.txt.zip`, beside the exe |
-| Scheduled task | `MasterSeeker.Shell.<md5-of-exe-path>`, with a **Remove** button |
+| Settings | `%APPDATA%\Spotter\settings.xml` |
+| App log | `Spotter.log`, beside the exe |
+| Engine log | `Spotter.Engine.log` + rotated `Spotter.Engine.N.log.zip`, beside the exe |
+| Scheduled task | `Spotter.<md5-of-exe-path>`, with a **Remove** button |
 
 That is the complete list — three files and one scheduled task. The engine log is worth naming
 because it is not written by this shell at all: `GClass95` in the 2014 engine writes it to
@@ -410,7 +414,7 @@ The scheduled task is the only entry that changes something outside those folder
 it gets a Remove button rather than just a path. Removing it costs nothing but a UAC prompt on
 the next launch — the app re-registers after you approve one.
 
-**About** sits below it: version, what the app actually is (a .NET 8 shell over DxCK's 2014
+**About** sits below it: version, what the app actually is (a .NET 8 WPF app over the
 engine, reading the MFT directly), and the path it is running from. Every path is a read-only
 text box rather than a label, so it can be selected and copied.
 
@@ -437,7 +441,7 @@ false. This port had it on, which was simply wrong. It matters more than a defau
 a tray icon lets the window leave the screen while the process keeps running, and this process
 holds a raw handle on every volume. Closing should mean closed unless someone asked otherwise.
 
-Worth being straight about the part this does *not* fix: while MasterSeeker is open it holds a
+Worth being straight about the part this does *not* fix: while Spotter is open it holds a
 raw handle on every volume, because that is how it reads the MFT and follows the USN journal.
 Freeing a drive means closing the app — which now actually closes it. Turn the tray icon on in
 **Options** if you want the old behaviour back, and know that a window tucked into the tray is
@@ -558,7 +562,7 @@ indexed. Re-running whatever happened to be typed at that moment would quietly d
 point of the mode, so it only re-runs a query the user actually asked for — one run through the
 Search button, Enter, the history, or `--search`.
 
-Settings live in `%APPDATA%\DxCK\MasterSeeker\wpf-settings.xml`. **Options** covers the language,
+Settings live in `%APPDATA%\Spotter\settings.xml`. **Options** covers the language,
 the search mode, the hotkey, the tray and the theme; the rest of the file — window geometry, column
 widths, sort, the search history — is written by the app and can be edited by hand. `Language` is
 blank for "follow Windows" and stays blank until someone picks one explicitly, so changing the

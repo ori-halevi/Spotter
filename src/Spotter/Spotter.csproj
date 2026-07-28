@@ -26,18 +26,17 @@
     <Product>Spotter</Product>
     <AssemblyTitle>Spotter</AssemblyTitle>
     <Description>Instant file search over the NTFS master file table.</Description>
-    <Company>Spotter</Company>
+    <Company>Ori Halevi</Company>
     <!-- ASCII only: non-ASCII characters here come out mangled in the Win32 version resource,
          which is what Explorer's Properties tab reads. -->
-    <!-- Put your own name or handle here: copyright belongs to whoever wrote the code, and this
-         string is what Explorer's Properties tab shows. -->
-    <Copyright>Copyright (C) 2026 Spotter</Copyright>
+    <Copyright>Copyright (C) 2026 Ori Halevi</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- WPF-UI ships satellite assemblies for ~20 languages; the app itself is English-only, so
-         they are 20 folders of dead weight in the release drop. -->
+    <!-- WPF-UI ships satellite assemblies for ~20 languages. Spotter's own six languages are
+         compiled in as plain dictionaries rather than resources, so those satellites would be 20
+         folders of dead weight beside a single portable executable. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <!-- WFAC010 tells WinForms apps to declare DPI awareness through ApplicationHighDpiMode
@@ -46,6 +45,13 @@
          Application.SetHighDpiMode would do nothing here. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ApplicationIcon only stamps the Win32 icon on the .exe, which is what Explorer and the
+         taskbar read. Drawing the same icon INSIDE the app - window chrome, title bar, dialogs -
+         needs it as a WPF resource as well, addressable by pack URI. -->
+    <Resource Include="spotter.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="WPF-UI" Version="4.3.0" />
