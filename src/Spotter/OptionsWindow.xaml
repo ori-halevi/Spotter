@@ -1,0 +1,187 @@
+<ui:FluentWindow x:Class="Spotter.OptionsWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:loc="clr-namespace:Spotter.Localization"
+                 Title="{loc:Loc Options.Title}"
+                 Width="560" Height="820" MinWidth="460" MinHeight="420"
+                 ResizeMode="CanResize"
+                 WindowBackdropType="Mica"
+                 ExtendsContentIntoTitleBar="True"
+                 FlowDirection="{loc:LangProp FlowDirection}"
+                 WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- Star, not Auto: an Auto row hands the scroll viewer unlimited height, so the
+                 content simply overflows the window instead of scrolling. -->
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="{loc:Loc Options.Title}"
+                     ShowMaximize="False" ShowMinimize="False" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20,8,20,0">
+
+            <!-- First, because it is the setting that decides whether the rest of this window is
+                 readable at all. -->
+            <TextBlock Text="{loc:Loc Options.Language}" FontWeight="SemiBold" Margin="0,8,0,6" />
+            <ComboBox x:Name="LanguageBox" Width="260" HorizontalAlignment="Left"
+                      DisplayMemberPath="Label"
+                      SelectionChanged="OnLanguageChosen" />
+            <TextBlock x:Name="LanguageHint" TextWrapping="Wrap" Opacity="0.7"
+                       Margin="0,6,0,0" Text="{loc:Loc Options.Language.Hint}" />
+            <TextBlock x:Name="LanguageUnsupported" TextWrapping="Wrap" Opacity="0.7"
+                       Margin="0,4,0,0" Visibility="Collapsed"
+                       Text="{loc:Loc Options.Language.Unsupported}" />
+
+            <Separator Margin="0,18,0,12" />
+
+            <TextBlock Text="{loc:Loc Options.Searching}" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <CheckBox x:Name="LiveSearchBox" Content="{loc:Loc Options.SearchAsYouType}"
+                      Checked="OnLiveSearchToggled" Unchecked="OnLiveSearchToggled" />
+            <TextBlock x:Name="LiveSearchHint" TextWrapping="Wrap" Opacity="0.7"
+                       Margin="24,2,0,0" />
+
+            <Separator Margin="0,18,0,12" />
+
+            <TextBlock Text="{loc:Loc Options.Hotkey}" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <TextBlock Text="{loc:Loc Options.Hotkey.Hint}"
+                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,8" />
+            <!-- The combination is written with the key names Windows prints on the keys, so it is
+                 read left to right whatever the UI language is. -->
+            <ui:TextBox x:Name="HotkeyBox"
+                        PlaceholderText="{loc:Loc Options.Hotkey.Placeholder}"
+                        IsReadOnly="True"
+                        FlowDirection="LeftToRight"
+                        Icon="{ui:SymbolIcon Keyboard24}"
+                        PreviewKeyDown="OnHotkeyKeyDown" />
+            <TextBlock x:Name="HotkeyHint" Foreground="#E5A50A" TextWrapping="Wrap"
+                       Margin="0,6,0,0" Visibility="Collapsed" />
+            <ui:Button x:Name="ClearHotkeyButton" Content="{loc:Loc Options.Hotkey.Disable}"
+                       Margin="0,8,0,0"
+                       Padding="10,4" Click="OnClearHotkey" />
+
+            <Separator Margin="0,18,0,12" />
+
+            <TextBlock Text="{loc:Loc Options.Tray}" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <CheckBox x:Name="ShowTrayBox" Content="{loc:Loc Options.Tray.Show}" Margin="0,0,0,6"
+                      Checked="OnTrayToggled" Unchecked="OnTrayToggled" />
+            <CheckBox x:Name="MinimizeTrayBox" Content="{loc:Loc Options.Tray.Minimize}"
+                      Margin="20,0,0,6" />
+            <CheckBox x:Name="CloseTrayBox" Content="{loc:Loc Options.Tray.Close}"
+                      Margin="20,0,0,0" />
+
+            <Separator Margin="0,18,0,12" />
+
+            <TextBlock Text="{loc:Loc Options.Appearance}" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <ComboBox x:Name="ThemeBox" Width="200" HorizontalAlignment="Left">
+                <ComboBoxItem Content="{loc:Loc Options.Theme.Auto}" />
+                <ComboBoxItem Content="{loc:Loc Options.Theme.Dark}" />
+                <ComboBoxItem Content="{loc:Loc Options.Theme.Light}" />
+            </ComboBox>
+
+            <Separator Margin="0,18,0,12" />
+
+            <!-- Everything Spotter leaves on the machine, named and reachable. It is
+                 spread across three places for reasons that make sense to the program and to
+                 nobody else, so the least it can do is say where. -->
+            <TextBlock Text="{loc:Loc Options.Storage}" FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <TextBlock Text="{loc:Loc Options.Storage.Hint}"
+                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,10" />
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Every path box below is FlowDirection=LeftToRight: a filesystem path is not
+                     language, and under a right-to-left paragraph direction its trailing segment
+                     and separators are reordered into something that is not the path. -->
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Options.Storage.Settings}"
+                           Opacity="0.8" />
+                <ui:Button Grid.Row="0" Grid.Column="1" Content="{loc:Loc Common.OpenFolder}"
+                           Padding="10,2"
+                           Margin="8,0,0,0" Tag="settings" Click="OnOpenStorage"
+                           ToolTip="{loc:Loc Options.Storage.Open.Tip}" />
+                <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="SettingsPathBox"
+                         IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                         FlowDirection="LeftToRight"
+                         Padding="0" Margin="0,0,0,10" FontSize="12" Opacity="0.75"
+                         TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Loc Options.Storage.AppLog}"
+                           Opacity="0.8" />
+                <ui:Button Grid.Row="2" Grid.Column="1" Content="{loc:Loc Common.OpenFolder}"
+                           Padding="10,2"
+                           Margin="8,0,0,0" Tag="applog" Click="OnOpenStorage" />
+                <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="AppLogPathBox"
+                         IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                         FlowDirection="LeftToRight"
+                         Padding="0" Margin="0,0,0,10" FontSize="12" Opacity="0.75"
+                         TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{loc:Loc Options.Storage.EngineLog}"
+                           Opacity="0.8" />
+                <ui:Button Grid.Row="4" Grid.Column="1" Content="{loc:Loc Common.OpenFolder}"
+                           Padding="10,2"
+                           Margin="8,0,0,0" Tag="enginelog" Click="OnOpenStorage" />
+                <TextBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" x:Name="EngineLogPathBox"
+                         IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                         FlowDirection="LeftToRight"
+                         Padding="0" Margin="0,0,0,10" FontSize="12" Opacity="0.75"
+                         TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{loc:Loc Options.Storage.Task}"
+                           Opacity="0.8" />
+                <ui:Button Grid.Row="6" Grid.Column="1" x:Name="RemoveTaskButton"
+                           Content="{loc:Loc Common.Remove}" Padding="10,2" Margin="8,0,0,0"
+                           Click="OnRemoveElevationTask"
+                           ToolTip="{loc:Loc Options.Storage.Task.Remove.Tip}" />
+                <!-- This one is a sentence with a task name in it, not a path, so it follows the
+                     UI direction like any other prose. -->
+                <TextBox Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" x:Name="TaskPathBox"
+                         IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                         Padding="0" Margin="0,0,0,0" FontSize="12" Opacity="0.75"
+                         TextWrapping="Wrap" />
+            </Grid>
+
+            <Separator Margin="0,18,0,12" />
+
+            <TextBlock Text="{loc:Loc Options.About}" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <TextBlock x:Name="AboutVersionText" TextWrapping="Wrap" FlowDirection="LeftToRight"
+                       TextAlignment="{loc:LangProp StartAlignment}" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.75" Margin="0,6,0,0"
+                       Text="{loc:Loc Options.About.Text}" />
+            <TextBox x:Name="ExePathBox" IsReadOnly="True" BorderThickness="0"
+                     Background="Transparent" Padding="0" Margin="0,8,0,0" FontSize="12"
+                     FlowDirection="LeftToRight"
+                     Opacity="0.75" TextWrapping="Wrap" />
+        </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="20,20,20,20">
+            <ui:Button Content="{loc:Loc Common.Cancel}" Padding="16,6" Margin="0,0,8,0"
+                       Click="OnCancel" />
+            <ui:Button Content="{loc:Loc Common.Save}" Appearance="Primary" Padding="16,6"
+                       Click="OnSave" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

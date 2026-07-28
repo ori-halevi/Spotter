@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Spotter</AssemblyName>
+    <RootNamespace>Spotter</RootNamespace>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>spotter.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Shipping identity. Without these the exe reports FileVersion 1.0.0.0 and an empty
+       copyright, which is what a released binary must never do - there is then no way to tell
+       which build a bug report came from. Keep <Version> and the version in app.manifest's
+       <assemblyIdentity> in step; they are two separate declarations of the same thing. -->
+  <PropertyGroup>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <InformationalVersion>2.0.0</InformationalVersion>
+    <Product>Spotter</Product>
+    <AssemblyTitle>Spotter</AssemblyTitle>
+    <Description>Instant file search over the NTFS master file table.</Description>
+    <Company>Spotter</Company>
+    <!-- ASCII only: non-ASCII characters here come out mangled in the Win32 version resource,
+         which is what Explorer's Properties tab reads. -->
+    <!-- Put your own name or handle here: copyright belongs to whoever wrote the code, and this
+         string is what Explorer's Properties tab shows. -->
+    <Copyright>Copyright (C) 2026 Spotter</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- WPF-UI ships satellite assemblies for ~20 languages; the app itself is English-only, so
+         they are 20 folders of dead weight in the release drop. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- WFAC010 tells WinForms apps to declare DPI awareness through ApplicationHighDpiMode
+         rather than the manifest. This is a WPF app that only references WinForms for NotifyIcon
+         and Screen; WPF takes its per-monitor awareness from the manifest, and
+         Application.SetHighDpiMode would do nothing here. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The engine lives outside src/ because it is not part of what this repository publishes;
+         see the README and .gitignore. -->
+    <ProjectReference Include="../../engine/Core/Spotter.Core.csproj" />
+  </ItemGroup>
+
+</Project>

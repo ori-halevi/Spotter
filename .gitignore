@@ -1,0 +1,27 @@
+# ---- the search engine is not published from here ------------------------------------------
+#
+# engine/ holds the file-table reader the shell links against, plus the reference material it
+# came from. It is kept out of this repository on purpose - see the README. A fresh clone
+# therefore will not build until engine/Core/Spotter.Core.csproj exists.
+engine/
+
+# ---- build output --------------------------------------------------------------------------
+bin/
+obj/
+publish/
+tmpbin/
+*.user
+*.suo
+.vs/
+
+# Build transcripts. These were being committed alongside the source; msbuild -fl output is a
+# record of one machine's build, never of the code.
+*.log
+!README*.log
+
+# ---- runtime artefacts ---------------------------------------------------------------------
+# Logs live under %LOCALAPPDATA%\Spotter, but older builds wrote them next to the exe and the
+# engine's own rotation leaves zips behind.
+Spotter.log
+Spotter.Engine.log
+*.txt.zip
