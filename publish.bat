@@ -1,8 +1,8 @@
 @echo off
-rem Release build for handing to someone else.
+rem Release build. Both modes produce ONE file - Spotter.exe and nothing else.
 rem
-rem   publish.bat        small build, needs the .NET 8 Desktop Runtime installed
-rem   publish.bat full   one self-contained exe that runs on any Windows x64
+rem   publish.bat        small exe, needs the .NET 8 Desktop Runtime installed
+rem   publish.bat full   self-contained exe that runs on any Windows x64
 rem
 rem Labels rather than if-blocks on purpose: variables set inside a parenthesised block in cmd
 rem are not visible in that same block without delayed expansion, which is a classic way to get
@@ -23,7 +23,11 @@ goto run
 
 :full
 set "OUT=publish\full"
-set "ARGS=--self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true"
+rem IncludeNativeLibrariesForSelfExtract: WPF ships native DLLs (wpfgfx, PresentationNative,
+rem D3DCompiler...) which single-file publishing leaves beside the exe unless told otherwise.
+rem Bundled, they are unpacked into a temp folder at first run instead - not into whatever
+rem folder the user dropped Spotter in.
+set "ARGS=--self-contained true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
 set "NOTE=Self-contained. Runs on any Windows x64 with nothing preinstalled."
 goto run
 
@@ -31,16 +35,18 @@ goto run
 echo Publishing to %OUT% ...
 echo.
 rmdir /s /q "%OUT%" 2>nul
-dotnet publish src\Spotter\Spotter.csproj -c Release -r win-x64 %ARGS% -o "%OUT%"
+dotnet publish src\Spotter\Spotter.csproj -c Release -r win-x64 -p:PublishSingleFile=true %ARGS% -o "%OUT%"
 if errorlevel 1 goto fail
 
 echo.
 echo Published.
-echo   %OUT%\Spotter.exe
 echo   %NOTE%
 echo.
-echo Reading the file table needs administrator; Spotter asks for it on first launch and
-echo registers a scheduled task so later launches from the same path do not prompt again.
+echo Contents of %OUT%:
+dir /b "%OUT%"
+echo.
+echo That should be one file. Spotter keeps its settings in %%APPDATA%%\Spotter and its log in
+echo %%LOCALAPPDATA%%\Spotter, so it writes nothing beside itself wherever you put it.
 echo.
 pause
 exit /b 0

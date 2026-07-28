@@ -14,6 +14,9 @@ every drive, one keystroke away.
 - **It is genuinely instant.** 8 drives read in 54 seconds at startup, then 855 results for
   `notepad` in **228 ms**. Not "fast for a search tool" — fast enough that you keep typing and
   the list keeps up.
+- **It is one file, and it stays one file.** Drop `Spotter.exe` on your desktop, a USB stick, or
+  straight into `C:\` and run it from there for good. It writes nothing beside itself — no logs,
+  no config, no folder appearing next to it.
 - **It closes when you close it.** No tray icon by default, no process left holding your drives.
   Click X and it is gone, so removing a USB stick still works.
 - **It tells you where it keeps things.** Options lists every file and scheduled task it creates
@@ -74,12 +77,15 @@ that field red and says why, instead of quietly returning zero results that look
 # Debug build with symbols
 build-debug.bat
 
-# Release build (needs the .NET 8 Desktop Runtime on the target PC)
+# Release: one 7 MB exe, needs the .NET 8 Desktop Runtime on the target PC
 publish.bat
 
-# One self-contained exe that runs on any Windows x64
+# Release: one 66 MB exe that runs on any Windows x64 with nothing preinstalled
 publish.bat full
 ```
+
+Both modes publish **a single `Spotter.exe`** and nothing else — the engine, WPF-UI, the runtime
+configuration, the debug symbols and WPF's native libraries are all bundled inside it.
 
 Then just start typing. Useful switches while developing:
 
@@ -120,7 +126,18 @@ engine looks like.
   queued and drained on a timer instead of being marshalled one at a time
 - **Compiled localization** — six plain dictionaries in the executable, no satellite assemblies,
   no folders beside the exe
-- Settings in `%APPDATA%\Spotter`, logs in `%LOCALAPPDATA%\Spotter`
+
+### Where it puts things
+
+| | |
+|---|---|
+| Settings | `%APPDATA%\Spotter\settings.xml` |
+| Log | `%LOCALAPPDATA%\Spotter\Spotter.log` |
+| Engine log (off by default) | `%LOCALAPPDATA%\Spotter\Spotter.Engine.log` |
+| Elevation task | Task Scheduler, named after the exe's path — moving Spotter deletes the old one |
+
+**Beside the executable: nothing.** Options lists all of the above with a button to open each one,
+and to remove the scheduled task.
 
 Design decisions, the measurements behind them, and the mistakes found along the way are written
 up in [src/Spotter/README.md](src/Spotter/README.md).

@@ -23,6 +23,9 @@ namespace Spotter;
 /// </summary>
 internal static class ElevationTask
 {
+    /// <summary>Shared by every task this app registers, so they can be found again.</summary>
+    private const string Prefix = "Spotter.";
+
     /// <summary>The task name, so Options can name what it is offering to remove.</summary>
     public static string Name => TaskName;
 
@@ -36,7 +39,42 @@ internal static class ElevationTask
             // Truncated because a task name is for humans to recognise in Task Scheduler.
             string path = (Environment.ProcessPath ?? "unknown").ToLowerInvariant();
             byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(path));
-            return "Spotter." + Convert.ToHexString(hash, 0, 8).ToLowerInvariant();
+            return Prefix + Convert.ToHexString(hash, 0, 8).ToLowerInvariant();
+        }
+    }
+
+    /// <summary>
+    /// Deletes the elevation tasks this app registered for any other location.
+    ///
+    /// The task name is derived from the executable's path, so moving Spotter — which is the
+    /// normal thing to do with a single portable file — leaves the old task behind pointing at
+    /// somewhere nothing lives any more. One move is untidy; a habit of moving it fills Task
+    /// Scheduler with dead entries that nobody would think to go and clear out.
+    ///
+    /// Deliberately "every other one" rather than "every one whose target is missing": a copy
+    /// kept on a USB stick has a perfectly valid target that simply is not plugged in right now,
+    /// and testing for existence would delete its task every time you ran the copy on C:.
+    ///
+    /// The cost of being wrong is one UAC prompt the next time that other copy starts, after
+    /// which it registers itself again.
+    /// </summary>
+    private static void RemoveTasksForOtherLocations()
+    {
+        foreach (string name in GClass252.GetTaskNamesStartingWith(Prefix))
+        {
+            if (string.Equals(name, TaskName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            try
+            {
+                GClass252.smethod_9(name);
+                Log.Write($"removed elevation task for a previous location: {name}");
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"could not remove old elevation task {name}: {ex.Message}");
+            }
         }
     }
 
@@ -125,6 +163,10 @@ internal static class ElevationTask
     {
         try
         {
+            // Before the early return, not after: the point is to clear up after a move, and
+            // after a move this location's own task usually already exists by the second run.
+            RemoveTasksForOtherLocations();
+
             if (Exists())
             {
                 return;

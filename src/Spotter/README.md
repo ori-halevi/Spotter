@@ -12,12 +12,17 @@ deliberate and worth keeping.
 
 ## Requirements
 
-Windows 10 1809 or later, x64, and the **.NET 8 Desktop Runtime**. This is a framework-dependent
-build: without the runtime installed, launching it produces a Windows dialog offering to download
-it. To ship something that runs anywhere with no prerequisite, publish self-contained instead —
-about 150 MB rather than 7:
+Windows 10 1809 or later, x64.
 
-    dotnet publish src/Spotter/Spotter.csproj -c Release -r win-x64 --self-contained
+Both publish modes produce **one `Spotter.exe` and nothing else** — see `publish.bat`. The default
+is framework-dependent (7 MB) and needs the **.NET 8 Desktop Runtime**; without it, launching
+produces a Windows dialog offering to download it. `publish.bat full` is self-contained (66 MB)
+and needs nothing preinstalled.
+
+Getting to a genuinely single file took four settings, and each of them defaults the other way:
+`PublishSingleFile` to bundle the managed assemblies, `DebugType=embedded` in *both* projects so
+no `.pdb` survives alongside, `IncludeNativeLibrariesForSelfExtract` for WPF's native DLLs in the
+self-contained build, and no `App.config` at all — that one ships as `Spotter.dll.config`.
 
 Long paths are declared in the manifest, so results whose full path is over 260 characters can be
 opened, deleted and inspected rather than merely listed.
@@ -81,7 +86,7 @@ administrator.
 | `TrayIcon.cs`, `Hotkey.cs` | Notification area, and the global restore hotkey |
 | `ElevationTask.cs` | "Ask for administrator once per location, then never again" |
 | `Dialogs.cs` | The app's message boxes, in one place so they are right-to-left aware |
-| `Log.cs` | Append-only diagnostics next to the exe |
+| `Log.cs` | Append-only diagnostics under `%LOCALAPPDATA%\Spotter` |
 | `Localization/Lang.cs` | Language selection, lookup, plurals, byte units, flow direction |
 | `Localization/PopupDirection.cs` | Gives tooltips and context menus the reading direction |
 | `Localization/Strings*.cs` | One table per language: `En`, `Ar`, `De`, `Es`, `He`, `Ru` |
@@ -261,8 +266,15 @@ anywhere on the machine — into the install directory.
 Its rotation is the part that has to be seen to be believed. Turning it back on for one 100-second
 verification run produced a 6.5 MB log **plus 118 numbered zip archives**, all beside the exe.
 
-`App.config` turns it off. Set `LogEnabled` to `True` there, and point `LogFilePath` at somewhere
-writable, when you need to see what the engine is doing.
+It is off, and off in the *code* — `Spotter.Utils.Settings` declares `LogEnabled` as `False` via
+`DefaultSettingValue`. It used to be on by default and switched off by an `App.config` shipped
+beside the exe, which stopped being an option the moment Spotter became a single file: delete the
+sidecar and the dangerous default comes back. A safe default has to be the built-in one.
+
+Set it to `True` there when you need to see what the engine is doing. It writes to
+`%LOCALAPPDATA%\Spotter` — `GClass95` resolves a bare file name under per-user data rather than
+`AppContext.BaseDirectory`, so even switched on it cannot litter the folder Spotter was dropped
+into.
 
 `--search <term>` preloads the search box at startup, which is what makes an automated elevated
 check possible at all.
@@ -401,18 +413,37 @@ selected in Explorer:
 | | |
 |---|---|
 | Settings | `%APPDATA%\Spotter\settings.xml` |
-| App log | `Spotter.log`, beside the exe |
-| Engine log | `Spotter.Engine.log` + rotated `Spotter.Engine.N.log.zip`, beside the exe |
+| App log | `%LOCALAPPDATA%\Spotter\Spotter.log` |
+| Engine log (off) | `%LOCALAPPDATA%\Spotter\Spotter.Engine.log` + rotated `.log.zip` |
 | Scheduled task | `Spotter.<md5-of-exe-path>`, with a **Remove** button |
 
-That is the complete list — three files and one scheduled task. The engine log is worth naming
-because it is not written by this shell at all: `GClass95` in the 2014 engine writes it to
-`AppContext.BaseDirectory`, so it appears next to the executable whether or not anything here
-asks for it.
+That is the complete list — three files and one scheduled task, and **none of them beside the
+executable**. Spotter ships as a single file meant to be dropped anywhere and run from there, so
+anything it wrote next to itself would litter a desktop or a USB stick root; under Program Files
+it would fail outright for an ordinary user, and an elevated run would leave a file the user
+afterwards cannot delete.
+
+Three separate places had to be fixed for that to be true, and each was a default someone had to
+notice: `Log.cs` fell back to `AppContext.BaseDirectory` when per-user data was unavailable, the
+engine's `GClass95` resolved any relative log name against `AppContext.BaseDirectory`, and
+`App.config` — the file that switched the engine logger off — was itself a sidecar. Removing it
+meant moving its settings into `DefaultSettingValue` attributes, or deleting it would have
+switched the noisiest logger in the program back on.
 
 The scheduled task is the only entry that changes something outside those folders, which is why
 it gets a Remove button rather than just a path. Removing it costs nothing but a UAC prompt on
 the next launch — the app re-registers after you approve one.
+
+It also cleans up after itself. The task name is derived from the executable's path, so moving a
+single portable file — the normal thing to do with one — would otherwise leave a task behind
+pointing at nothing, and a habit of moving it would fill Task Scheduler with dead entries nobody
+would think to clear. `RemoveTasksForOtherLocations` deletes every `Spotter.*` task that is not
+this location's, on each elevated start.
+
+It deletes by *name*, not by testing whether the target still exists, and that is deliberate: a
+copy on a USB stick has a perfectly valid target that simply is not plugged in, and an existence
+test would delete its task every time you ran the copy on `C:`. The cost of the simpler rule is
+one UAC prompt the next time that other copy starts.
 
 **About** sits below it: version, what the app actually is (a .NET 8 WPF app over the
 engine, reading the MFT directly), and the path it is running from. Every path is a read-only

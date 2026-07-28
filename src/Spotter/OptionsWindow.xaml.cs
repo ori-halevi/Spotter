@@ -177,8 +177,14 @@ public partial class OptionsWindow
 
     // ---- what the app leaves on the machine -------------------------------------------------
 
+    /// <summary>
+    /// Beside the app's own log, under per-user data — the engine resolves a bare file name
+    /// there too. Nothing Spotter writes ever lands next to the executable.
+    /// </summary>
     private static string EngineLogPath =>
-        System.IO.Path.Combine(AppContext.BaseDirectory, "SpotterLog.txt");
+        System.IO.Path.Combine(
+            System.IO.Path.GetDirectoryName(Log.FilePath) ?? string.Empty,
+            "Spotter.Engine.log");
 
     private void ShowStorageLocations()
     {

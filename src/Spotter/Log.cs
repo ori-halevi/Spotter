@@ -40,9 +40,10 @@ internal static class Log
         }
         catch
         {
-            // Better beside the exe than no diagnostics at all; Write swallows the failure if
-            // that is not writable either.
-            return System.IO.Path.Combine(AppContext.BaseDirectory, "Spotter.log");
+            // Temp, never AppContext.BaseDirectory. Spotter is a single file meant to be dropped
+            // anywhere and run from there; a fallback that writes beside the executable would
+            // quietly litter a desktop or a USB stick root the one time this path is taken.
+            return System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Spotter.log");
         }
     }
 
