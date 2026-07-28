@@ -9,6 +9,40 @@ every drive, one keystroke away.
 
 ---
 
+## ⬇️ Download
+
+Every release ships **two files**. They are the same program — the only difference is whether
+.NET comes inside the exe or has to already be on the PC.
+
+| File | Size | Take this one if… |
+|---|---|---|
+| `Spotter-<ver>-win-x64-standalone.exe` | ~66 MB | **You just want it to work.** Nothing to install. |
+| `Spotter-<ver>-win-x64-requires-dotnet8.exe` | ~8 MB | You already have the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0), or do not mind installing it. |
+
+<details>
+<summary>What is the actual difference?</summary>
+
+C# code cannot run on Windows by itself — it needs the .NET runtime, a set of libraries that runs
+it (WPF, the drawing, all of it). The only question is where that comes from.
+
+**standalone** carries the whole runtime inside the executable. Bigger, but it runs on any
+Windows 10/11 x64 with nothing preinstalled. The trade-off is that its copy of .NET is frozen at
+build time, so security fixes arrive when a new Spotter release is published rather than through
+Windows Update.
+
+**requires-dotnet8** contains only Spotter and expects the runtime to already be installed. If it
+is not, Windows offers to download it on first launch. Smaller, and it picks up .NET security
+updates on its own.
+
+Like a document that needs Word installed, versus the document and Word shipped together.
+
+</details>
+
+Either way, what you download is **one file**. Put it wherever you like — desktop, a USB stick,
+straight into `C:\` — and run it from there. It writes nothing next to itself.
+
+---
+
 ## Why Spotter?
 
 - **It is genuinely instant.** 8 drives read in 54 seconds at startup, then 855 results for
@@ -77,15 +111,20 @@ that field red and says why, instead of quietly returning zero results that look
 # Debug build with symbols
 build-debug.bat
 
-# Release: one 7 MB exe, needs the .NET 8 Desktop Runtime on the target PC
+# Both release files, named and ready to attach to a GitHub release
 publish.bat
-
-# Release: one 66 MB exe that runs on any Windows x64 with nothing preinstalled
-publish.bat full
 ```
 
-Both modes publish **a single `Spotter.exe`** and nothing else — the engine, WPF-UI, the runtime
-configuration, the debug symbols and WPF's native libraries are all bundled inside it.
+`publish.bat` always builds **both** flavours and leaves exactly two files in `publish\`:
+
+```
+Spotter-2.0.0-win-x64-standalone.exe          65.8 MB
+Spotter-2.0.0-win-x64-requires-dotnet8.exe     7.7 MB
+```
+
+The version in the names is read from the `.csproj`, so it can never drift from what the exe
+reports. Each is a single file: the engine, WPF-UI, the runtime configuration, the debug symbols
+and WPF's native libraries are all bundled inside.
 
 Then just start typing. Useful switches while developing:
 
@@ -165,3 +204,54 @@ commercially, as long as you keep the notice and state what you changed.
 Made by **[ori-halevi](https://github.com/ori-halevi)**.
 
 Contributions, ideas, and issues are welcome.
+
+---
+
+<div dir="rtl">
+
+## 🇮🇱 בעברית — הדברים החשובים
+
+**Spotter מוצא כל קובץ במחשב לפני שסיימת להקליד את שמו.**
+
+הוא קורא ישירות את טבלת הקבצים של NTFS — האינדקס שמערכת הקבצים כבר מנהלת — במקום לסרוק תיקיות
+ברקע. לכן אין סורק, אין שירות שרץ כל הזמן, ואין המתנה. 8 כוננים נקראים ב־54 שניות בהפעלה, ואחר כך
+כל חיפוש חוזר תוך רבע שנייה.
+
+### מה להוריד
+
+בכל שחרור יש **שני קבצים**, אותה תוכנה בדיוק. ההבדל היחיד הוא אם מנוע ההרצה של .NET ארוז בפנים או
+אמור להיות מותקן כבר במחשב:
+
+| קובץ | גודל | מתי לבחור בו |
+|---|---|---|
+| `standalone` | ‎66 MB | **סתם שיעבוד.** אין מה להתקין. |
+| `requires-dotnet8` | ‎8 MB | אם כבר מותקן אצלך .NET 8 Desktop Runtime, או שלא אכפת לך להתקין |
+
+### קובץ אחד, בכל מקום
+
+מה שמורידים הוא **קובץ בודד**. אפשר לשים אותו על שולחן העבודה, על דיסק־און־קי או ישר ב־`C:\`
+ולהפעיל משם דרך קבע. הוא **לא כותב שום דבר לידו** — לא לוגים, לא הגדרות, ולא תיקייה שצצה פתאום.
+
+מה שהוא כן שומר, שמור במקומות המקובלים במחשב, וחלון ההגדרות מציג את כולם עם כפתור שפותח כל אחד:
+
+| | |
+|---|---|
+| הגדרות | `%APPDATA%\Spotter\settings.xml` |
+| לוג | `%LOCALAPPDATA%\Spotter\Spotter.log` |
+| משימה מתוזמנת | לפי נתיב הקובץ — העברה של הקובץ מוחקת את הישנה |
+
+### הרשאות מנהל
+
+קריאת טבלת הקבצים דורשת גישה גולמית לכונן, ולכן גם הרשאות מנהל. בהפעלה הראשונה תופיע בקשת UAC
+אחת; אחריה נרשמת משימה מתוזמנת עבור המיקום הזה, וכל הפעלה משם כבר לא תשאל.
+
+### עוד דברים ששווה לדעת
+
+- **סגירה היא סגירה.** אין אייקון במגש כברירת מחדל ואין תהליך שנשאר ברקע — מה שחשוב, כי כל עוד
+  התוכנה פתוחה היא מחזיקה ידית על כל כונן, וזה חוסם הוצאה בטוחה של דיסק־און־קי.
+- **שש שפות**, כולל עברית וערבית בפריסה נכונה מימין לשמאל — לא חלון אנגלי הפוך.
+- **גם לתיקיות יש גודל** ומספר פריטים, ולכן מסנן גודל תופס גם אותן.
+- **קלט שגוי אומר את זה.** ביטוי רגולרי שבור או גודל שלא מתפרש צובעים את השדה באדום ומסבירים,
+  במקום להחזיר אפס תוצאות שנראות בדיוק כמו "לא נמצא כלום".
+
+</div>

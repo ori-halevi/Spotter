@@ -1,52 +1,69 @@
 @echo off
-rem Release build. Both modes produce ONE file - Spotter.exe and nothing else.
+rem Builds BOTH release flavours and leaves exactly two files in publish\, named so that anyone
+rem looking at a GitHub release page can tell which one they want without reading anything:
 rem
-rem   publish.bat        small exe, needs the .NET 8 Desktop Runtime installed
-rem   publish.bat full   self-contained exe that runs on any Windows x64
+rem   Spotter-<ver>-win-x64-standalone.exe        everything inside, no prerequisites
+rem   Spotter-<ver>-win-x64-requires-dotnet8.exe  small, needs the .NET 8 Desktop Runtime
 rem
-rem Labels rather than if-blocks on purpose: variables set inside a parenthesised block in cmd
-rem are not visible in that same block without delayed expansion, which is a classic way to get
-rem a script that silently publishes the wrong thing.
+rem Each is a single file. Spotter writes nothing beside itself wherever it is put.
 setlocal
 cd /d "%~dp0"
 
-if /i "%~1"=="full" goto full
-if "%~1"=="" goto lite
-echo Usage: publish.bat [full]
-exit /b 1
+rem Version comes from the csproj so the file names can never drift from what the exe reports.
+rem findstr matches the literal "<Version>", which does not appear inside <AssemblyVersion> or
+rem <FileVersion>, so this picks exactly one line.
+set "VER="
+for /f "tokens=3 delims=<>" %%v in ('findstr /i /c:"<Version>" src\Spotter\Spotter.csproj') do set "VER=%%v"
+if not defined VER (
+    echo Could not read ^<Version^> from src\Spotter\Spotter.csproj.
+    pause
+    exit /b 1
+)
 
-:lite
-set "OUT=publish\lite"
-set "ARGS=--self-contained false"
-set "NOTE=Needs the .NET 8 Desktop Runtime on the target PC."
-goto run
+set "OUT=publish"
+set "TMP_=%OUT%\_build"
+set "STANDALONE=Spotter-%VER%-win-x64-standalone.exe"
+set "NEEDSNET=Spotter-%VER%-win-x64-requires-dotnet8.exe"
 
-:full
-set "OUT=publish\full"
-rem IncludeNativeLibrariesForSelfExtract: WPF ships native DLLs (wpfgfx, PresentationNative,
-rem D3DCompiler...) which single-file publishing leaves beside the exe unless told otherwise.
-rem Bundled, they are unpacked into a temp folder at first run instead - not into whatever
-rem folder the user dropped Spotter in.
-set "ARGS=--self-contained true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
-set "NOTE=Self-contained. Runs on any Windows x64 with nothing preinstalled."
-goto run
-
-:run
-echo Publishing to %OUT% ...
+echo Spotter %VER% - building both release flavours
 echo.
+
 rmdir /s /q "%OUT%" 2>nul
-dotnet publish src\Spotter\Spotter.csproj -c Release -r win-x64 -p:PublishSingleFile=true %ARGS% -o "%OUT%"
+mkdir "%TMP_%" 2>nul
+
+echo [1/2] Standalone (self-contained, no prerequisites)...
+rem IncludeNativeLibrariesForSelfExtract: WPF ships native DLLs (wpfgfx, PresentationNative,
+rem D3DCompiler...) which single-file publishing otherwise leaves beside the exe. Bundled, they
+rem are unpacked into a temp folder at first run instead of into wherever Spotter was dropped.
+dotnet publish src\Spotter\Spotter.csproj -c Release -r win-x64 ^
+    -p:PublishSingleFile=true --self-contained true ^
+    -p:EnableCompressionInSingleFile=true ^
+    -p:IncludeNativeLibrariesForSelfExtract=true ^
+    -o "%TMP_%\standalone"
+if errorlevel 1 goto fail
+move /y "%TMP_%\standalone\Spotter.exe" "%OUT%\%STANDALONE%" >nul
 if errorlevel 1 goto fail
 
 echo.
-echo Published.
-echo   %NOTE%
+echo [2/2] Framework-dependent (needs the .NET 8 Desktop Runtime)...
+dotnet publish src\Spotter\Spotter.csproj -c Release -r win-x64 ^
+    -p:PublishSingleFile=true --self-contained false ^
+    -o "%TMP_%\lite"
+if errorlevel 1 goto fail
+move /y "%TMP_%\lite\Spotter.exe" "%OUT%\%NEEDSNET%" >nul
+if errorlevel 1 goto fail
+
+rmdir /s /q "%TMP_%" 2>nul
+
 echo.
-echo Contents of %OUT%:
-dir /b "%OUT%"
+echo ============================================================
+echo  Release %VER% ready in %OUT%\
+echo ============================================================
+for %%f in ("%OUT%\*.exe") do echo   %%~nxf   %%~zf bytes
 echo.
-echo That should be one file. Spotter keeps its settings in %%APPDATA%%\Spotter and its log in
-echo %%LOCALAPPDATA%%\Spotter, so it writes nothing beside itself wherever you put it.
+echo  Upload BOTH to the same GitHub release.
+echo    standalone        - runs on any Windows x64, nothing to install
+echo    requires-dotnet8  - small; needs the .NET 8 Desktop Runtime
 echo.
 pause
 exit /b 0
