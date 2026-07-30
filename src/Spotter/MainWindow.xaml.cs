@@ -58,6 +58,16 @@ public partial class MainWindow
         Loaded += (_, __) => ListenForShowRequests();
         StateChanged += OnWindowStateChanged;
         Closing += OnWindowClosing;
+        // Logoff and shutdown end the process whatever the tray settings say, but they arrive at
+        // OnWindowClosing looking like an ordinary close — which close-to-tray cancels, skipping
+        // the save. The cancel is ignored (WPF is shutting down regardless), so everything the
+        // session changed was silently lost. Save here, while there is still time to; the flag
+        // keeps the close that follows from detouring into the tray.
+        Application.Current.SessionEnding += (_, __) =>
+        {
+            _reallyExiting = true;
+            SaveSettings();
+        };
         // Each independently: the engine's stop signal is the one that matters most on the way
         // out, and it should not be skipped because unregistering a hotkey threw.
         Closed += (_, __) =>

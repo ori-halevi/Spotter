@@ -127,24 +127,76 @@ public sealed class UiSettings
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "Spotter", "settings.xml");
 
+    /// <summary>
+    /// The elevation handover means two Spotter processes briefly overlap — the launcher and the
+    /// elevated copy it starts, plus sometimes an old instance still writing its settings on the
+    /// way out. Their reads and writes of this one file collide for a few milliseconds, which is
+    /// long enough to matter and short enough that waiting it out always works.
+    /// </summary>
+    private const int IoAttempts = 10;
+    private const int IoRetryDelayMs = 100;
+
+    /// <summary>
+    /// Set when the file existed but stayed unreadable through every retry. Serialized never —
+    /// XmlSerializer only looks at public members — and checked by <see cref="Save"/>: a settings
+    /// object that could not read the file must not overwrite it.
+    /// </summary>
+    private bool _unreadable;
+
     public static UiSettings Load()
     {
-        try
+        for (int attempt = 1; ; attempt++)
         {
-            if (File.Exists(FilePath))
+            try
             {
+                if (!File.Exists(FilePath))
+                {
+                    // A missing file is a first run — unless another instance is mid-save, which
+                    // leaves its .tmp visible while File.Replace has the real file in flux. That
+                    // instant used to be read as "no settings", and the defaults it produced were
+                    // later saved over the user's real file: the language, and everything else,
+                    // reset on the next launch with nothing in the log.
+                    if (!File.Exists(FilePath + ".tmp"))
+                    {
+                        return new UiSettings();
+                    }
+                    throw new IOException("another instance is replacing the settings file");
+                }
                 using FileStream stream = File.OpenRead(FilePath);
                 if (new XmlSerializer(typeof(UiSettings)).Deserialize(stream) is UiSettings loaded)
                 {
                     return loaded;
                 }
+                return new UiSettings();
+            }
+            catch (IOException) when (attempt < IoAttempts)
+            {
+                System.Threading.Thread.Sleep(IoRetryDelayMs);
+            }
+            catch (IOException ex)
+            {
+                if (!File.Exists(FilePath))
+                {
+                    // The .tmp that kept us retrying is a leftover from a crashed save, not a
+                    // save in progress — there is no real file here to protect, so these are
+                    // ordinary first-run defaults and saving over the leftover is fine.
+                    return new UiSettings();
+                }
+
+                // Still locked after every retry. Run on defaults, but remember that a real file
+                // is sitting there unread — Save must not replace it with these defaults.
+                Log.Write("could not read settings, running on defaults for this session: "
+                          + ex.Message);
+                return new UiSettings { _unreadable = true };
+            }
+            catch (Exception ex)
+            {
+                // Corrupt or unparseable. Defaults are the only option, and overwriting a file
+                // that cannot be parsed loses nothing.
+                Log.Write("could not load settings, using defaults: " + ex.Message);
+                return new UiSettings();
             }
         }
-        catch (Exception ex)
-        {
-            Log.Write("could not load settings, using defaults: " + ex.Message);
-        }
-        return new UiSettings();
     }
 
     /// <summary>
@@ -157,31 +209,52 @@ public sealed class UiSettings
     /// </summary>
     public void Save()
     {
-        try
+        if (_unreadable)
         {
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(FilePath));
-
-            string temporary = FilePath + ".tmp";
-            using (FileStream stream = File.Create(temporary))
-            {
-                new XmlSerializer(typeof(UiSettings)).Serialize(stream, this);
-                stream.Flush(flushToDisk: true);
-            }
-
-            if (File.Exists(FilePath))
-            {
-                // Replace is atomic where the filesystem can manage it, and keeps the old file
-                // until the new one is in place.
-                File.Replace(temporary, FilePath, destinationBackupFileName: null);
-            }
-            else
-            {
-                File.Move(temporary, FilePath);
-            }
+            // These settings are defaults standing in for a file that could not be read. Writing
+            // them out is exactly the bug this guards against: every stored setting replaced by
+            // its default because of one transient lock at startup.
+            Log.Write("not saving settings: the existing file was unreadable at startup and "
+                      + "would be overwritten with defaults");
+            return;
         }
-        catch (Exception ex)
+
+        for (int attempt = 1; ; attempt++)
         {
-            Log.Write("could not save settings: " + ex.Message);
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(FilePath));
+
+                string temporary = FilePath + ".tmp";
+                using (FileStream stream = File.Create(temporary))
+                {
+                    new XmlSerializer(typeof(UiSettings)).Serialize(stream, this);
+                    stream.Flush(flushToDisk: true);
+                }
+
+                if (File.Exists(FilePath))
+                {
+                    // Replace is atomic where the filesystem can manage it, and keeps the old file
+                    // until the new one is in place.
+                    File.Replace(temporary, FilePath, destinationBackupFileName: null);
+                }
+                else
+                {
+                    File.Move(temporary, FilePath);
+                }
+                return;
+            }
+            catch (IOException) when (attempt < IoAttempts)
+            {
+                // Another instance is reading or replacing the file right now — the same
+                // milliseconds-long overlap Load waits out.
+                System.Threading.Thread.Sleep(IoRetryDelayMs);
+            }
+            catch (Exception ex)
+            {
+                Log.Write("could not save settings: " + ex.Message);
+                return;
+            }
         }
     }
 }
