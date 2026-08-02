@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Spotter.Localization;
 
@@ -90,7 +90,7 @@ internal static class StringsHe
             ["Toolbar.Recent"] = "אחרונים",
             ["Toolbar.Recent.Tip"] = "חיפושים שכבר ביצעת, החדשים ראשונים. חץ למטה בתיבת החיפוש פותח את אותה רשימה.",
             ["Toolbar.Options"] = "אפשרויות",
-            ["Toolbar.Options.Tip"] = "שפה, אופן החיפוש, מקש קיצור גלובלי, סמל באזור ההודעות וערכת נושא.",
+            ["Toolbar.Options.Tip"] = "שפה, אופן החיפוש, מקש קיצור גלובלי, סמל באזור ההודעות, ערכת נושא וגודל החלון.",
 
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "שם: התאמת רישיות",
@@ -299,6 +299,16 @@ internal static class StringsHe
             ["Options.Theme.Auto"] = "לפי Windows",
             ["Options.Theme.Dark"] = "כהה",
             ["Options.Theme.Light"] = "בהיר",
+
+            ["Options.Size"] = "גודל החלון",
+            ["Options.Size.Hint"] = "Spotter נפתח ברבע השמאלי-העליון של המסך, ומצייר את הטקסט והפקדים בגודל שמתאים לגודל המסך — לא לכמות הפיקסלים שבו.",
+            ["Options.Size.Auto"] = "התאמה למסך הזה",
+            ["Options.Size.Auto.Detail"] = "למסך שלך יוצא {0}%. הסר את הסימון כדי לקבע גודל משלך.",
+            ["Options.Size.Percent"] = "{0}%",
+            ["Options.Size.Remember"] = "לזכור איפה השארת את החלון",
+            ["Options.Size.Remember.Hint"] = "כל שינוי גודל, הזזה או הגדלה למסך מלא יחזור בפעם הבאה. המצב היחיד שלעולם לא נשמר הוא חלון שנשאר כמעט לגמרי מחוץ למסך, כי אז לא הייתה שום דרך לגרור אותו בחזרה.",
+            ["Options.Size.Reset"] = "איפוס גודל ומיקום",
+            ["Options.Size.Reset.Tip"] = "מחזיר את החלון מיד לרבע השמאלי-העליון של המסך, בגודל ברירת המחדל.",
 
             ["Options.Storage"] = "מה התוכנה שומרת במחשב שלך",
             ["Options.Storage.Hint"] = "שום דבר נוסף לא נכתב בשום מקום. כדי להסיר את הכול: מחק את קובצי Spotter משתי התיקיות האלה והסר את המשימה המתוזמנת שלמטה.",

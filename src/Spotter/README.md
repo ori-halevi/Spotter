@@ -80,15 +80,18 @@ administrator.
 | `MainWindow.xaml(.cs)` | The window: query fields, options, results grid, commands, sorting, history |
 | `SearchEngine.cs` | Wraps `GClass134`; owns the staging queue, the drain timer and the thread boundary |
 | `Results.cs` | `FileItem` (one row) and `ResultsView` (the virtualizing collection) |
-| `ShellIcons.cs` | `SHGetFileInfo` icons, cached per extension |
-| `OptionsWindow.xaml(.cs)` | Language, search mode, hotkey picker, tray and theme |
+| `ShellIcons.cs` | `SHGetFileInfo` icons, cached per extension, sized for the interface scale |
+| `OptionsWindow.xaml(.cs)` | Language, search mode, hotkey picker, tray, theme and window size |
 | `UiSettings.cs` | Everything persisted between runs, including the search history |
 | `TrayIcon.cs`, `Hotkey.cs` | Notification area, and the global restore hotkey |
 | `ElevationTask.cs` | "Ask for administrator once per location, then never again" |
 | `Dialogs.cs` | The app's message boxes, in one place so they are right-to-left aware |
 | `Log.cs` | Append-only diagnostics under `%LOCALAPPDATA%\Spotter` |
 | `Localization/Lang.cs` | Language selection, lookup, plurals, byte units, flow direction |
-| `Localization/PopupDirection.cs` | Gives tooltips and context menus the reading direction |
+| `PopupChrome.cs` | Gives tooltips and context menus the reading direction and the scale |
+| `Displays.cs` | The attached monitors: usable area and per-monitor DPI |
+| `UiScale.cs` | One shared `ScaleTransform` — how large the whole interface is drawn |
+| `WindowLayout.cs` | Where a window opens, how small it may get, what is worth remembering |
 | `Localization/Strings*.cs` | One table per language: `En`, `Ar`, `De`, `Es`, `He`, `Ru` |
 
 ## Three design points worth knowing
@@ -221,11 +224,14 @@ Two fixes that look right and are not, both found by screenshot:
    helper rather than the routed-event path, so `EventManager` class handlers are not invoked — and
    it fails without a word.
 
-`PopupDirection` uses the *opening* events instead, which are ordinary routed events raised on the
+`PopupChrome` uses the *opening* events instead, which are ordinary routed events raised on the
 owner before the popup is shown, so placement is computed from the direction rather than corrected
 after it. It sets a local value and leaves Style and Template alone. A popup can opt out with
-`PopupDirection.SetFollow(x, false)` — the indexing tooltip does, being a table of volume names and
+`PopupChrome.SetFollow(x, false)` — the indexing tooltip does, being a table of volume names and
 byte counts.
+
+The same boundary is why `PopupChrome` also hands each popup the interface scale: a
+`LayoutTransform` on a window's content no more reaches a context menu than a `FlowDirection` does.
 
 `MessageBox` is a Win32 dialog and understands none of this, but it does understand
 `MessageBoxOptions.RtlReading`, which is why every message box in the app goes through `Dialogs`.
@@ -499,6 +505,68 @@ Two consequences worth knowing:
 The running total for a multi-selection still counts files only. A folder's size already includes
 the files inside it, so adding both would count them twice.
 
+### The window is sized against the screen, not the resolution
+
+A search window is something you glance at, not something you live in, so it never opens filling
+the display. On a first run it opens in the **top-left quarter** of the work area, inset on all
+four sides so it touches neither the screen's own corner nor the middle of the imaginary cross that
+quarters it. `WindowLayout.Default` works that rectangle out; there is no hard-coded default size
+in `UiSettings` any more, because the right size depends on the screen and a number cannot.
+
+The interface is drawn at a scale worked out the same way. `UiScale` owns one `ScaleTransform` that
+every window hangs its content off as a `LayoutTransform`, so one number moves text, padding,
+icons, row heights and the title bar together — a font size would have moved the words and left
+everything else where it was.
+
+"Screen size, not resolution" is the whole point, and it is why `Displays` divides each monitor's
+work area by that monitor's own DPI before anything looks at it. A device-independent unit is 1/96
+inch, so a 27-inch 4K panel that Windows drives at 150% measures the same as the 27-inch 1080p
+panel beside it, and gets the same answer. A pixel count would have made the 4K panel twice the
+screen and doubled everything on it.
+
+The scale follows the diagonal of that area, heavily damped and clamped to 0.75–1.5: a screen twice
+the size wants slightly bigger type and a great deal more rows, not twice the type. The reference
+sits between the two shapes of ordinary desktop monitor rather than on top of either — 1920x1080 is
+2184 units across the diagonal, 2560x1440 at 125% is 2327, and both are a normal monitor at a normal
+viewing distance — so the whole of that band rounds to 100% instead of drifting across it. Options
+can lock it anywhere from 50% to 250% instead, previewing live and reverting on Cancel, exactly as
+the language picker does.
+
+Three things a `LayoutTransform` cannot carry, each handled where it breaks:
+
+- **Tooltips and context menus** render in their own top-level windows. `PopupChrome` hands them
+  the transform as they open, alongside the reading direction — see the popup section above.
+- **The history and folder-suggestion popups** are ours, so their content carries the transform
+  directly, and the width binding moved from the `Popup` to the scaled `Border` inside it. Left on
+  the Popup it would have been the box's unscaled width, which stops matching what is on screen the
+  moment the scale is not 1.
+- **A combo box's drop-down** belongs to the theme's template, so `PopupChrome.ScaleDropDown`
+  reaches it through `PART_Popup` when it opens.
+
+The window's `MinWidth`/`MinHeight` are maintained from code rather than XAML for the same reason:
+they belong to the frame, which sits outside the transform, so at 140% the same content genuinely
+needs 40% more window. They are capped at the work area, because a minimum larger than the monitor
+is a window that cannot be moved or closed.
+
+### Everything you do to the window is kept, with two exceptions
+
+Resizing, moving and maximizing all come back next time. `WindowLayout.IsUsable` rejects exactly
+two arrangements, and only because both are ones the user cannot undo:
+
+- **No title bar left to grab.** Fewer than 180 units of it on any one monitor — per monitor, not
+  summed, because half a title bar on each of two screens leaves nothing clickable in the gap.
+- **Almost nothing on screen.** Less than 30% of the window inside a work area. A window
+  deliberately pushed half off the edge is a real thing people do and is kept.
+
+The same check runs on the way out and on the way back in, so an arrangement is not stored if it
+would strand the window, and a stored one is dropped if the monitor it lived on has since been
+unplugged. A stored size larger than the monitor it lands on is trimmed rather than discarded —
+that is a screen that shrank, not a user doing something odd.
+
+`PlacementVersion` in the settings file says what the four geometry numbers mean. An older file
+deserializes it as 0, which is read as "nothing worth restoring", so the 2.0 default of a 1200x720
+window centred on the screen is dropped once and replaced by the quarter above.
+
 ### Scrolling and columns
 
 Three things a list is expected to do that this one did not:
@@ -511,6 +579,38 @@ Three things a list is expected to do that this one did not:
 - **Column edges can be dragged.** Retemplating `GridViewColumnHeader` to theme it had dropped
   `PART_HeaderGripper` — the Thumb that `GridViewColumnHeader` looks up by name to implement
   resizing. Restoring it brings back dragging and double-click-to-fit.
+
+### The columns share out the window
+
+All seven columns divide the width of the results list between them, and they do it again every
+time that width changes. This is not tidiness. Columns past the right edge can only be reached by
+scrolling sideways, and the horizontal scrollbar's range comes from the **rows** — so with no
+results there is nothing to scroll, and those columns cannot be brought into view at all. Before
+any search has run, which is the first thing anyone ever sees, the grid was showing a name, a path,
+and a column called "Si".
+
+Each column takes a floor first and the remainder is split by share. The floors are what the
+content needs, not what looks balanced, and the asymmetry is deliberate: a name or a path that runs
+out of room ends in an ellipsis and is still doing its job, because the eye only needs the start of
+it. A date that runs out of room reads `12/17/2024 3:38 A`, which is not a shorter date — it is a
+wrong one. So the three date columns hold enough for the widest common short format and the name
+and path take what is left, and the shares then send almost all the growth from a wider window back
+to those two.
+
+`RowChrome` comes off the top: each row is a `Border` carrying the `ListViewItem` style's
+`Margin="2,1"` and `Padding="6,4"`, sixteen units the columns never see. Forgetting it puts a
+horizontal scrollbar under a grid that looks like it fits.
+
+Dragging any column edge — `Thumb.DragCompleted`, which bubbles from `PART_HeaderGripper` to the
+header — turns the whole thing off and hands the widths to the user, because auto-fit and a dragged
+width cannot both be true and the one done by hand wins. **Reset all column widths** turns it back
+on. `Fit this column to its contents` also turns it off, for the same reason: it is a decision about
+one column, and the next window resize would otherwise undo it silently.
+
+The name cell is a `DockPanel` rather than a `StackPanel`, which matters only now that the column
+can be narrow: a horizontal StackPanel measures its children with unlimited width, so the
+`TextTrimming="CharacterEllipsis"` on the name never fired and a long name was cut off mid-letter by
+the cell's clip instead.
 
 ### Right-click menus
 
@@ -594,8 +694,8 @@ point of the mode, so it only re-runs a query the user actually asked for — on
 Search button, Enter, the history, or `--search`.
 
 Settings live in `%APPDATA%\Spotter\settings.xml`. **Options** covers the language,
-the search mode, the hotkey, the tray and the theme; the rest of the file — window geometry, column
-widths, sort, the search history — is written by the app and can be edited by hand. `Language` is
+the search mode, the hotkey, the tray, the theme and the window size; the rest of the file — window
+geometry, column widths, sort, the search history — is written by the app and can be edited by hand. `Language` is
 blank for "follow Windows" and stays blank until someone picks one explicitly, so changing the
 Windows display language still moves the app with it.
 

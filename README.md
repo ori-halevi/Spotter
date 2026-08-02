@@ -67,6 +67,7 @@ straight into `C:\` — and run it from there. It writes nothing next to itself.
 • 🕘 **Recent searches** • ↕️ **Natural sorting** (`file2` before `file10`) • 📤 **CSV & text export**
 • 🗑️ **Delete to Recycle Bin** • 🖱️ **Drag results into any app** • ⌨️ **Global hotkey**
 • 🌍 **6 languages, 2 right-to-left** • 🌗 **Follows your Windows theme**
+• 🖥️ **Sizes itself to your screen**
 
 ### A few worth explaining
 
@@ -77,6 +78,12 @@ matches folders too.
 **Per-field options.** Case sensitivity and regular expressions belong to the *field*, not the
 search. A case-sensitive filename inside a loosely matched folder is a different question from
 the reverse, and both are one click away.
+
+**It sizes itself to your screen.** Spotter opens in the top-left quarter of your display, inset
+from the corner and from the middle, and draws its text and controls at a size that suits how big
+that screen physically is — not how many pixels are on it, so a 4K panel does not get a window
+twice the size of the 1080p one beside it. Whatever you then resize, move or maximize it to comes
+back next time, and Options can lock the scale anywhere from 50% to 250% instead.
 
 **It tells you when a filter is wrong.** A broken regular expression or an unparseable size turns
 that field red and says why, instead of quietly returning zero results that look exactly like
@@ -249,6 +256,9 @@ Contributions, ideas, and issues are welcome.
 
 - **סגירה היא סגירה.** אין אייקון במגש כברירת מחדל ואין תהליך שנשאר ברקע — מה שחשוב, כי כל עוד
   התוכנה פתוחה היא מחזיקה ידית על כל כונן, וזה חוסם הוצאה בטוחה של דיסק־און־קי.
+- **החלון מתאים את עצמו למסך.** הוא נפתח ברבע השמאלי־העליון, במרחק מהפינה ומהאמצע, והטקסט
+  והפקדים מצוירים בגודל שמתאים לגודל הפיזי של המסך — לא לכמות הפיקסלים שבו. כל שינוי גודל
+  או מיקום נשמר לפעם הבאה, ובאפשרויות אפשר לקבע את הקנה־מידה בעצמך בין 50% ל־250%.
 - **שש שפות**, כולל עברית וערבית בפריסה נכונה מימין לשמאל — לא חלון אנגלי הפוך.
 - **גם לתיקיות יש גודל** ומספר פריטים, ולכן מסנן גודל תופס גם אותן.
 - **קלט שגוי אומר את זה.** ביטוי רגולרי שבור או גודל שלא מתפרש צובעים את השדה באדום ומסבירים,

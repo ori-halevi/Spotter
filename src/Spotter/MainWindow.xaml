@@ -6,15 +6,18 @@
                  xmlns:loc="clr-namespace:Spotter.Localization"
                  Title="Spotter"
                  Icon="pack://application:,,,/spotter.ico"
-                 Width="1200" Height="720"
-                 MinWidth="720" MinHeight="420"
                  WindowBackdropType="Mica"
                  ExtendsContentIntoTitleBar="True"
-                 WindowStartupLocation="CenterScreen"
                  FlowDirection="{loc:LangProp FlowDirection}"
                  PreviewKeyDown="OnWindowKeyDown">
 
-    <!-- Every piece of text here comes through {loc:Loc Key}, which resolves to a binding rather
+    <!-- No Width, Height, MinWidth or MinHeight, and no WindowStartupLocation. All five depend on
+         how big the screen is, so they are worked out at startup by WindowLayout and applied from
+         the constructor. Every size below is therefore a size at 100%: the root grid carries the
+         shared UiScale.Transform as its LayoutTransform, so one number moves the whole window —
+         text, padding, icons, row heights and the title bar together.
+
+         Every piece of text here comes through {loc:Loc Key}, which resolves to a binding rather
          than a string, so changing language in Options updates this window in place instead of
          waiting for it to be reopened.
 
@@ -220,18 +223,32 @@
              character, so "notepad.exe" reads left to right and a Hebrew name reads right to
              left, in the same list. -->
         <DataTemplate x:Key="NameCell">
-            <StackPanel Orientation="Horizontal"
-                        ToolTip="{Binding Contents}"
-                        ToolTipService.IsEnabled="{Binding IsDirectory}">
+            <!-- A DockPanel, not a StackPanel. A horizontal StackPanel measures its children with
+                 unlimited width, so the TextBlock below always believed it had room and its
+                 CharacterEllipsis never fired: a name too long for the column was cut off
+                 mid-letter by the cell's clip instead of ending in an ellipsis. Docking the icon
+                 and letting the text fill the rest gives it a real width to trim against. -->
+            <DockPanel LastChildFill="True"
+                       ToolTip="{Binding Contents}"
+                       ToolTipService.IsEnabled="{Binding IsDirectory}">
                 <!-- Never mirrored. WPF flips Image content under RightToLeft, and a mirrored
-                     file-type icon is simply a broken icon. -->
-                <Image Source="{Binding Icon}" Width="16" Height="16"
+                     file-type icon is simply a broken icon.
+
+                     16 is the size at 100%; the scale transform on the root grid takes it from
+                     there, and ShellIcons asks the shell for a bitmap with enough pixels in it to
+                     survive that. HighQuality is what makes a 32-pixel icon shown at 22 look like
+                     an icon rather than a smudge. -->
+                <!-- Dock="Left" is logical, so under RightToLeft WPF mirrors it and the icon stays
+                     on the leading edge, ahead of the name, in Hebrew too. -->
+                <Image DockPanel.Dock="Left"
+                       Source="{Binding Icon}" Width="16" Height="16"
                        FlowDirection="LeftToRight"
+                       RenderOptions.BitmapScalingMode="HighQuality"
                        Margin="0,0,8,0" SnapsToDevicePixels="True" />
                 <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
                            FlowDirection="{Binding NameDirection}"
                            TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+            </DockPanel>
         </DataTemplate>
 
         <DataTemplate x:Key="PathCell">
@@ -267,7 +284,9 @@
 
     </ui:FluentWindow.Resources>
 
-    <Grid>
+    <!-- Everything in the window hangs off this one element, which is what makes a single
+         LayoutTransform on it enough to resize the entire interface. -->
+    <Grid x:Name="RootLayout">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -417,14 +436,18 @@
             <Popup x:Name="HistoryPopup" Grid.Column="0"
                    PlacementTarget="{Binding ElementName=FilenameBox}"
                    Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
-                   PopupAnimation="Fade"
-                   Width="{Binding ActualWidth, ElementName=FilenameBox}">
-                <!-- A Popup is its own visual root, outside the window's tree, so it does not
-                     inherit the window's FlowDirection and has to be given one. -->
+                   PopupAnimation="Fade">
+                <!-- A Popup is its own visual root, outside the window's tree, so it inherits
+                     neither the window's FlowDirection nor its scale and has to be given both.
+                     The width is set here rather than on the Popup for the same reason: the box's
+                     ActualWidth is measured inside the transform, so it only matches what is on
+                     screen once this Border has been scaled by the same amount. -->
                 <Border Background="{DynamicResource ApplicationBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlElevationBorderBrush}"
                         BorderThickness="1" CornerRadius="6" Margin="0,2,0,0"
                         FlowDirection="{loc:LangProp FlowDirection}"
+                        LayoutTransform="{x:Static local:UiScale.Transform}"
+                        Width="{Binding ActualWidth, ElementName=FilenameBox}"
                         Padding="4">
                     <StackPanel>
                         <TextBlock x:Name="HistoryEmpty"
@@ -454,12 +477,13 @@
             <Popup x:Name="FolderPopup" Grid.Column="2"
                    PlacementTarget="{Binding ElementName=DirectoryBox}"
                    Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
-                   PopupAnimation="Fade"
-                   Width="{Binding ActualWidth, ElementName=DirectoryBox}">
+                   PopupAnimation="Fade">
                 <Border Background="{DynamicResource ApplicationBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlElevationBorderBrush}"
                         BorderThickness="1" CornerRadius="6" Margin="0,2,0,0"
                         FlowDirection="{loc:LangProp FlowDirection}"
+                        LayoutTransform="{x:Static local:UiScale.Transform}"
+                        Width="{Binding ActualWidth, ElementName=DirectoryBox}"
                         Padding="4">
                     <!-- The entries are absolute paths, so they are read left to right whatever
                          the UI language is — see the result cells above for the same reasoning. -->
@@ -556,6 +580,10 @@
                         <Setter Property="ContextMenu" Value="{StaticResource HeaderMenu}" />
                         <Setter Property="ToolTip" Value="{loc:Loc Column.Tip}" />
                         <EventSetter Event="Click" Handler="OnColumnHeaderClick" />
+                        <!-- The gripper below is a Thumb, and DragCompleted bubbles from it to
+                             here. It is how the app learns that the user has taken the column
+                             widths over by hand, which switches off the automatic share-out. -->
+                        <EventSetter Event="Thumb.DragCompleted" Handler="OnColumnResized" />
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="GridViewColumnHeader">
@@ -672,14 +700,20 @@
                          Hebrew, so reading the header back as an identifier — which is what this
                          used to do — would look up a comparison that does not exist and silently
                          stop sorting. -->
+                    <!-- Name, Path, Size and Modified add up to just under the width of the window
+                         WindowLayout opens by default, so the four columns anyone actually reads
+                         are there without scrolling sideways for them. The three after that are
+                         off the right edge until the window is widened, which is the trade a
+                         window that opens in a quarter of the screen has to make somewhere.
+                         Widths here are at 100%; the scale transform moves them with the rest. -->
                     <GridView>
-                        <GridViewColumn local:ColumnKey.Value="Name" Width="320"
+                        <GridViewColumn local:ColumnKey.Value="Name" Width="290"
                                         CellTemplate="{StaticResource NameCell}" />
-                        <GridViewColumn local:ColumnKey.Value="Path" Width="520"
+                        <GridViewColumn local:ColumnKey.Value="Path" Width="370"
                                         CellTemplate="{StaticResource PathCell}" />
-                        <GridViewColumn local:ColumnKey.Value="Size" Width="110"
+                        <GridViewColumn local:ColumnKey.Value="Size" Width="95"
                                         CellTemplate="{StaticResource SizeCell}" />
-                        <GridViewColumn local:ColumnKey.Value="Modified" Width="150"
+                        <GridViewColumn local:ColumnKey.Value="Modified" Width="145"
                                         CellTemplate="{StaticResource ModifiedCell}" />
                         <GridViewColumn local:ColumnKey.Value="Type" Width="70"
                                         CellTemplate="{StaticResource TypeCell}" />

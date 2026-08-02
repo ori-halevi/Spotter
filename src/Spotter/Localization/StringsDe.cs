@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Spotter.Localization;
 
@@ -59,7 +59,7 @@ internal static class StringsDe
             ["Toolbar.Recent"] = "Zuletzt",
             ["Toolbar.Recent.Tip"] = "Frühere Suchen, die neuesten zuerst. Pfeil nach unten im Suchfeld öffnet dieselbe Liste.",
             ["Toolbar.Options"] = "Optionen",
-            ["Toolbar.Options.Tip"] = "Sprache, Suchmodus, globale Tastenkombination, Infobereich-Symbol und Design.",
+            ["Toolbar.Options.Tip"] = "Sprache, Suchmodus, globale Tastenkombination, Infobereich-Symbol, Design und Fenstergröße.",
 
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "Name: Groß-/Kleinschreibung",
@@ -267,6 +267,16 @@ internal static class StringsDe
             ["Options.Theme.Auto"] = "Wie Windows",
             ["Options.Theme.Dark"] = "Dunkel",
             ["Options.Theme.Light"] = "Hell",
+
+            ["Options.Size"] = "Fenstergröße",
+            ["Options.Size.Hint"] = "Spotter öffnet sich im linken oberen Viertel Ihres Bildschirms und stellt Text und Bedienelemente in einer Größe dar, die zur Größe dieses Bildschirms passt — nicht zu seiner Pixelzahl.",
+            ["Options.Size.Auto"] = "An diesen Bildschirm anpassen",
+            ["Options.Size.Auto.Detail"] = "Für Ihren Bildschirm ergeben sich {0} %. Zum Festlegen einer eigenen Größe abwählen.",
+            ["Options.Size.Percent"] = "{0} %",
+            ["Options.Size.Remember"] = "Merken, wo Sie das Fenster lassen",
+            ["Options.Size.Remember.Hint"] = "Größe, Position und Vollbild kommen beim nächsten Start so zurück, wie Sie sie hinterlassen haben. Nur eines wird nie übernommen: ein Fenster, das fast vollständig außerhalb des Bildschirms liegt — es ließe sich nicht mehr zurückziehen.",
+            ["Options.Size.Reset"] = "Größe und Position zurücksetzen",
+            ["Options.Size.Reset.Tip"] = "Setzt das Fenster sofort auf seine Standardgröße im linken oberen Viertel des Bildschirms zurück.",
 
             ["Options.Storage"] = "Was diese App auf Ihrem PC speichert",
             ["Options.Storage.Hint"] = "Sonst wird nirgendwo etwas geschrieben. Alles entfernen heißt: die Spotter-Dateien in diesen beiden Ordnern löschen und die unten genannte Aufgabe entfernen.",

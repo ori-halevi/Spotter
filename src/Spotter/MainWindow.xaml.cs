@@ -37,6 +37,13 @@ public partial class MainWindow
         ResultsList.SelectionChanged += (_, args) => UpdateSelectionText(args);
         ResultsList.PreviewKeyDown += OnResultsKeyDown;
 
+        // The list's own ScrollViewer is built by its template, so its viewport is reported rather
+        // than measured: this is the only thing that knows how much width the columns have to
+        // share, and it is raised whenever that changes — including when the vertical scrollbar
+        // appears and takes some of it away.
+        ResultsList.AddHandler(System.Windows.Controls.ScrollViewer.ScrollChangedEvent,
+            new System.Windows.Controls.ScrollChangedEventHandler(OnResultsScrollChanged));
+
         // Searching on every keystroke would restart the engine mid-flight while someone is
         // still typing a word. A short idle gap is enough to feel live without the churn.
         _typingDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) };
@@ -209,6 +216,10 @@ public partial class MainWindow
     /// </summary>
     private void ApplySettingsChange()
     {
+        // The options window previews the scale live, so this is usually a no-op — but it is what
+        // makes Save the thing that commits it, rather than the preview having quietly done so.
+        UiScale.Apply(UiScale.Resolve(_settings));
+
         Wpf.Ui.Appearance.ApplicationThemeManager.Apply(_settings.Theme switch
         {
             "Dark" => Wpf.Ui.Appearance.ApplicationTheme.Dark,
@@ -267,23 +278,13 @@ public partial class MainWindow
 
     private void RestoreSettings()
     {
-        if (_settings.WindowWidth > 200) Width = _settings.WindowWidth;
-        if (_settings.WindowHeight > 200) Height = _settings.WindowHeight;
-
-        // Only restore a position that still lands on a screen — an external monitor that is no
-        // longer attached would otherwise put the window somewhere unreachable.
-        if (!double.IsNaN(_settings.WindowLeft) && !double.IsNaN(_settings.WindowTop)
-            && IsOnScreen(_settings.WindowLeft, _settings.WindowTop))
-        {
-            WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
-            Left = _settings.WindowLeft;
-            Top = _settings.WindowTop;
-        }
-        if (_settings.Maximized)
-        {
-            WindowState = WindowState.Maximized;
-            _wasMaximized = true;      // StateChanged does not fire for the initial state
-        }
+        // Size and place the window before anything else can put a number on screen. Both come
+        // from WindowLayout, which either restores what the user left or works out the top-left
+        // quarter of the screen they are on — see the comment on that class for why a search
+        // window never opens filling the display.
+        WindowLayout.Scale(this, RootLayout, WindowLayout.MinimumContent);
+        WindowLayout.Restore(this, _settings);
+        _wasMaximized = WindowState == WindowState.Maximized;   // StateChanged skips the initial state
 
         _nameMatchCase = _settings.MatchCase;
         _nameRegex = _settings.Regex;
@@ -300,29 +301,23 @@ public partial class MainWindow
 
         ApplySearchMode();
 
-        System.Windows.Controls.GridView view = (System.Windows.Controls.GridView)ResultsList.View;
-        for (int i = 0; i < Math.Min(_settings.ColumnWidths.Count, view.Columns.Count); i++)
+        // Stored widths are only in charge once the user has taken the columns over by dragging
+        // one; until then they share out whatever width the list has, which is what keeps all
+        // seven of them on screen at any window size.
+        if (!_settings.AutoFitColumns)
         {
-            double w = _settings.ColumnWidths[i];
-            if (w > 20 && !double.IsNaN(w))
+            System.Windows.Controls.GridView view =
+                (System.Windows.Controls.GridView)ResultsList.View;
+            for (int i = 0; i < Math.Min(_settings.ColumnWidths.Count, view.Columns.Count); i++)
             {
-                view.Columns[i].Width = w;
+                double w = _settings.ColumnWidths[i];
+                if (w > 20 && !double.IsNaN(w))
+                {
+                    view.Columns[i].Width = w;
+                }
             }
         }
         UpdateHeaderArrows();
-    }
-
-    private static bool IsOnScreen(double left, double top)
-    {
-        System.Drawing.Rectangle point = new System.Drawing.Rectangle((int)left, (int)top, 50, 50);
-        foreach (System.Windows.Forms.Screen screen in System.Windows.Forms.Screen.AllScreens)
-        {
-            if (screen.WorkingArea.IntersectsWith(point))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void SaveSettings()
@@ -331,17 +326,10 @@ public partial class MainWindow
 
         // While the window is hidden in the tray its WindowState no longer describes how the user
         // left it, so fall back to the tracked value.
-        _settings.Maximized = IsVisible && WindowState != WindowState.Minimized
-            ? WindowState == WindowState.Maximized
-            : _wasMaximized;
-
-        if (WindowState == WindowState.Normal)
-        {
-            _settings.WindowWidth = Width;
-            _settings.WindowHeight = Height;
-            _settings.WindowLeft = Left;
-            _settings.WindowTop = Top;
-        }
+        WindowLayout.Capture(this, _settings,
+            IsVisible && WindowState != WindowState.Minimized
+                ? WindowState == WindowState.Maximized
+                : _wasMaximized);
 
         _settings.MatchCase = _nameMatchCase;
         _settings.Regex = _nameRegex;
@@ -581,7 +569,7 @@ public partial class MainWindow
             Content = DescribeVolumes(progress),
             FlowDirection = FlowDirection.LeftToRight,
         };
-        PopupDirection.SetFollow(volumes, false);
+        PopupChrome.SetFollow(volumes, false);
         IndexBar.ToolTip = volumes;
         RefreshStatusLine();
         RedrawGrowingFolders();
@@ -2361,6 +2349,11 @@ public partial class MainWindow
         {
             return;
         }
+        // Sizing one column to its contents is a decision about that column, so it takes the
+        // columns off auto-fit for the same reason dragging an edge does — otherwise the next
+        // resize of the window would silently undo it.
+        TakeColumnsOverManually();
+
         // The documented way to ask a GridViewColumn to measure itself: clear the width, then
         // read back what it settled on.
         column.Width = column.ActualWidth;
@@ -2369,13 +2362,147 @@ public partial class MainWindow
 
     private void OnResetColumnWidths(object sender, RoutedEventArgs e)
     {
-        double[] defaults = { 320, 520, 110, 150, 70, 150, 150 };
-        System.Windows.Controls.GridView view = (System.Windows.Controls.GridView)ResultsList.View;
-        for (int i = 0; i < view.Columns.Count && i < defaults.Length; i++)
+        _settings.AutoFitColumns = true;
+        FitColumns(_lastResultsViewportWidth);
+    }
+
+    // ---- column widths ---------------------------------------------------------------------
+
+    /// <summary>
+    /// How the width above the floors is shared out, in the column order of the XAML: name, path,
+    /// size, modified, type, created, accessed. Relative, not absolute — only the ratios matter.
+    ///
+    /// Weighted hard towards the name and the path, because those are the two columns that get
+    /// better with more room. A date column that is wide enough is finished; it does not become
+    /// more informative at twice the width, and the space is wanted elsewhere.
+    /// </summary>
+    private static readonly double[] ColumnShares = { 400, 420, 60, 90, 40, 90, 90 };
+
+    /// <summary>
+    /// What each column gets before any of that is shared out.
+    ///
+    /// These are what the content needs rather than what looks balanced, and the difference is the
+    /// point: a name or a path that runs out of room ends in an ellipsis and is still doing its
+    /// job, because the eye only needs the start of it. A date that runs out of room reads
+    /// "12/17/2024 3:38 A", which is not a shorter date — it is a wrong one. So the three date
+    /// columns hold enough for the widest common short format, and the name and path take what is
+    /// left over.
+    /// </summary>
+    private static readonly double[] ColumnFloors = { 130, 130, 80, 155, 50, 155, 155 };
+
+    /// <summary>
+    /// What a row spends on itself before any column sees a unit of it: the ListViewItem style's
+    /// Margin="2,1" and Padding="6,4" in MainWindow.xaml, added up across both sides. Keep the two
+    /// in step — get this wrong and the grid grows a horizontal scrollbar that has nothing to
+    /// scroll to.
+    /// </summary>
+    private const double RowChrome = 2 * 2 + 2 * 6;
+
+    /// <summary>
+    /// The last viewport width the results list reported, so Reset can re-fit without waiting for
+    /// the next resize.
+    /// </summary>
+    private double _lastResultsViewportWidth;
+
+    /// <summary>Guards the re-entry: setting widths raises ScrollChanged again.</summary>
+    private bool _fittingColumns;
+
+    private void OnResultsScrollChanged(object sender,
+                                        System.Windows.Controls.ScrollChangedEventArgs e)
+    {
+        _lastResultsViewportWidth = e.ViewportWidth;
+        if (!_fittingColumns && e.ViewportWidthChange != 0)
         {
-            view.Columns[i].Width = defaults[i];
+            FitColumns(e.ViewportWidth);
         }
     }
+
+    /// <summary>
+    /// Shares the width of the results list out between the columns, so that all seven are on
+    /// screen whatever the window is doing.
+    ///
+    /// This exists because of what happens when they do not fit. Columns past the right edge can
+    /// only be reached by scrolling sideways, and the scrollbar's range comes from the *rows* —
+    /// so with no results there is nothing to scroll and those columns cannot be brought into
+    /// view at all. Before any search has run, which is the first thing anyone sees, the grid was
+    /// therefore showing a name, a path and a column called "Si".
+    ///
+    /// Every column keeps its floor first and the remainder is split by share, so widening the
+    /// window gives the space to the name and the path rather than padding the date columns.
+    /// </summary>
+    private void FitColumns(double viewportWidth)
+    {
+        if (!_settings.AutoFitColumns || viewportWidth <= 0)
+        {
+            return;
+        }
+
+        System.Windows.Controls.GridView view = (System.Windows.Controls.GridView)ResultsList.View;
+        int count = Math.Min(view.Columns.Count, ColumnShares.Length);
+        if (count == 0)
+        {
+            return;
+        }
+
+        double floors = 0;
+        double shares = 0;
+        for (int i = 0; i < count; i++)
+        {
+            floors += ColumnFloors[i];
+            shares += ColumnShares[i];
+        }
+
+        // The columns do not get the whole viewport. Each row is a Border inside it carrying the
+        // ListViewItem style's Margin="2,1" and Padding="6,4" — 16 units across the pair of them —
+        // and a row wider than the viewport is exactly what puts a horizontal scrollbar under a
+        // grid that looks like it fits. The extra 2 is slack: landing precisely on the viewport
+        // leaves a rounding error to decide whether that scrollbar appears, and one that flickers
+        // in and out while the window is dragged is worse than one that never shows.
+        double available = viewportWidth - RowChrome - 2;
+
+        _fittingColumns = true;
+        try
+        {
+            if (available <= floors || shares <= 0)
+            {
+                // Narrower than the columns can honestly go. They overflow, and the window's own
+                // minimum size is what stops this from being reachable in practice.
+                for (int i = 0; i < count; i++)
+                {
+                    view.Columns[i].Width = ColumnFloors[i];
+                }
+                return;
+            }
+
+            double spare = available - floors;
+            for (int i = 0; i < count; i++)
+            {
+                view.Columns[i].Width = ColumnFloors[i] + spare * ColumnShares[i] / shares;
+            }
+        }
+        finally
+        {
+            _fittingColumns = false;
+        }
+    }
+
+    /// <summary>
+    /// Hands the columns to the user for good, at the widths they are at right now.
+    ///
+    /// Called the moment a column edge is dragged. Auto-fit and a dragged width cannot both be
+    /// true — the next resize would overwrite the drag — and of the two, the one the user just
+    /// did by hand wins.
+    /// </summary>
+    private void TakeColumnsOverManually()
+    {
+        if (_fittingColumns)
+        {
+            return;      // our own width assignment, not a drag
+        }
+        _settings.AutoFitColumns = false;
+    }
+
+    private void OnColumnResized(object sender, RoutedEventArgs e) => TakeColumnsOverManually();
 
     private System.Windows.Controls.GridViewColumn ColumnNamed(string key)
     {

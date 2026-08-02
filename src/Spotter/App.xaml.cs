@@ -107,11 +107,17 @@ public partial class App : Application
             ElevationTask.RegisterIfMissing();
         }
 
+        // Before the first window is constructed, for the same reason as the language above: the
+        // whole layout is drawn through this one transform, so starting at 100% and correcting a
+        // frame later would be a visible jolt on every launch.
+        UiScale.Initialize(Settings);
+        ShellIcons.FollowScale();
+
         ApplicationThemeManager.Apply(ResolveTheme(Settings.Theme));
 
         // After the theme, and deliberately not via a Style — a tooltip is its own window and does
         // not inherit the reading direction, but restyling it to fix that loses the Fluent look.
-        Localization.PopupDirection.Install();
+        PopupChrome.Install();
     }
 
     /// <summary>Maps the stored setting onto a concrete theme, following Windows when set to Auto.</summary>

@@ -5,14 +5,16 @@
                  xmlns:loc="clr-namespace:Spotter.Localization"
                  Title="{loc:Loc Options.Title}"
                  Icon="pack://application:,,,/spotter.ico"
-                 Width="560" Height="820" MinWidth="460" MinHeight="420"
                  ResizeMode="CanResize"
                  WindowBackdropType="Mica"
                  ExtendsContentIntoTitleBar="True"
                  FlowDirection="{loc:LangProp FlowDirection}"
                  WindowStartupLocation="CenterOwner">
 
-    <Grid>
+    <!-- Sized from code, like the main window: this dialog is nearly two thirds of a 1080p screen
+         tall at 100% and would run off the bottom of one at 150%, so its height is worked out
+         against the screen it opens on and its content scales with everything else. -->
+    <Grid x:Name="RootLayout">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <!-- Star, not Auto: an Auto row hands the scroll viewer unlimited height, so the
@@ -84,6 +86,52 @@
                 <ComboBoxItem Content="{loc:Loc Options.Theme.Dark}" />
                 <ComboBoxItem Content="{loc:Loc Options.Theme.Light}" />
             </ComboBox>
+
+            <Separator Margin="0,18,0,12" />
+
+            <!-- Size and placement. Both settings preview live, like the language above: a number
+                 that says "125%" tells you almost nothing about whether 125% is what you want, and
+                 the window behind this one is showing it. Cancel puts both back. -->
+            <TextBlock Text="{loc:Loc Options.Size}" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <TextBlock Text="{loc:Loc Options.Size.Hint}" TextWrapping="Wrap" Opacity="0.7"
+                       Margin="0,0,0,10" />
+
+            <CheckBox x:Name="AutoScaleBox" Content="{loc:Loc Options.Size.Auto}"
+                      Checked="OnAutoScaleToggled" Unchecked="OnAutoScaleToggled" />
+            <TextBlock x:Name="AutoScaleHint" TextWrapping="Wrap" Opacity="0.7"
+                       Margin="24,2,0,0" />
+
+            <!-- Enabled and dimmed together from UpdateScaleEnabled: WPF-UI's slider looks
+                 identical whether or not it is enabled, so a disabled one reads as a slider that
+                 has stopped working rather than one that is not yours to move. -->
+            <Grid x:Name="ScaleRow" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ScaleSlider" Grid.Column="0"
+                        Minimum="50" Maximum="250"
+                        TickFrequency="5" IsSnapToTickEnabled="True"
+                        SmallChange="5" LargeChange="10"
+                        VerticalAlignment="Center"
+                        ValueChanged="OnScaleSliderChanged" />
+                <!-- A percentage, so left-to-right in every language, and wide enough for "250%"
+                     that the slider does not twitch sideways as the number changes. -->
+                <TextBlock x:Name="ScaleValueText" Grid.Column="1"
+                           MinWidth="52" Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           FlowDirection="LeftToRight" TextAlignment="Right" />
+            </Grid>
+
+            <CheckBox x:Name="RememberPlacementBox" Content="{loc:Loc Options.Size.Remember}"
+                      Margin="0,16,0,0" />
+            <TextBlock Text="{loc:Loc Options.Size.Remember.Hint}" TextWrapping="Wrap"
+                       Opacity="0.7" Margin="24,2,0,0" />
+
+            <ui:Button Content="{loc:Loc Options.Size.Reset}" Margin="0,12,0,0" Padding="10,4"
+                       Icon="{ui:SymbolIcon ArrowReset24}"
+                       Click="OnResetWindow"
+                       ToolTip="{loc:Loc Options.Size.Reset.Tip}" />
 
             <Separator Margin="0,18,0,12" />
 

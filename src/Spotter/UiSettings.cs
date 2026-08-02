@@ -17,14 +17,67 @@ namespace Spotter;
 /// </summary>
 public sealed class UiSettings
 {
-    public double WindowWidth { get; set; } = 1200;
-    public double WindowHeight { get; set; } = 720;
+    // ---- window arrangement ---------------------------------------------------------------------
+    //
+    // All four are NaN until a run has something worth remembering. There is deliberately no
+    // hard-coded default size here any more: the size the window should open at depends on the
+    // screen it is opening on, so it is worked out at startup by WindowLayout.Default rather than
+    // frozen into a number that was right for one monitor.
+
+    public double WindowWidth { get; set; } = double.NaN;
+    public double WindowHeight { get; set; } = double.NaN;
     public double WindowLeft { get; set; } = double.NaN;
     public double WindowTop { get; set; } = double.NaN;
     public bool Maximized { get; set; }
 
-    /// <summary>Column widths in display order. Empty means "use the XAML defaults".</summary>
+    /// <summary>
+    /// What the four values above mean. Zero — which is what an older settings file deserializes
+    /// to, and what <see cref="WindowLayout.Forget"/> writes — means "nothing worth restoring", so
+    /// the window opens where <see cref="WindowLayout.Default"/> puts it.
+    /// </summary>
+    public int PlacementVersion { get; set; }
+
+    /// <summary>
+    /// Whether the size and position the user leaves the window at come back next time. On by
+    /// default: moving a window is a decision, and having it moved back is the app overruling it.
+    ///
+    /// Turning it off is for the case where that decision is not one: a machine whose monitors come
+    /// and go, where every launch should just start from the default.
+    /// </summary>
+    public bool RememberPlacement { get; set; } = true;
+
+    // ---- interface size --------------------------------------------------------------------------
+
+    /// <summary>
+    /// Whether the size of the text and controls is worked out from the screen — see
+    /// <see cref="UiScale"/> — or locked to <see cref="Scale"/>.
+    /// </summary>
+    public bool ScaleFollowsScreen { get; set; } = true;
+
+    /// <summary>
+    /// The locked scale, 1.0 being the size the layout was drawn at. Only consulted when
+    /// <see cref="ScaleFollowsScreen"/> is off, and clamped on the way in — a settings file saying
+    /// 40 must not produce a window with one visible button.
+    /// </summary>
+    public double Scale { get; set; } = 1.0;
+
+    /// <summary>
+    /// Column widths in display order. Only consulted when <see cref="AutoFitColumns"/> is off —
+    /// they are still written either way, so turning auto-fit off by dragging an edge starts from
+    /// what was on screen rather than from a stale layout.
+    /// </summary>
     public List<double> ColumnWidths { get; set; } = new List<double>();
+
+    /// <summary>
+    /// Whether the seven columns share out the width of the results list between them instead of
+    /// keeping fixed widths.
+    ///
+    /// On by default, and it has to be: fixed widths that add up to more than the window leave the
+    /// last columns off the right edge, where — with no rows to scroll — there is nothing to scroll
+    /// them into view with, so those columns simply cannot be seen. Dragging any column edge is
+    /// taken as "I will do this myself" and turns it off; Reset all column widths turns it back on.
+    /// </summary>
+    public bool AutoFitColumns { get; set; } = true;
 
     public string SortColumn { get; set; }
     public bool SortDescending { get; set; }

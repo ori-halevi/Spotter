@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Spotter.Localization;
 
@@ -59,7 +59,7 @@ internal static class StringsEs
             ["Toolbar.Recent"] = "Recientes",
             ["Toolbar.Recent.Tip"] = "Búsquedas anteriores, la más reciente primero. La flecha abajo en el cuadro de búsqueda abre la misma lista.",
             ["Toolbar.Options"] = "Opciones",
-            ["Toolbar.Options.Tip"] = "Idioma, modo de búsqueda, tecla rápida global, icono del área de notificación y tema.",
+            ["Toolbar.Options.Tip"] = "Idioma, modo de búsqueda, tecla rápida global, icono del área de notificación, tema y tamaño de la ventana.",
 
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "nombre: mayúsculas y minúsculas",
@@ -267,6 +267,16 @@ internal static class StringsEs
             ["Options.Theme.Auto"] = "El de Windows",
             ["Options.Theme.Dark"] = "Oscuro",
             ["Options.Theme.Light"] = "Claro",
+
+            ["Options.Size"] = "Tamaño de la ventana",
+            ["Options.Size.Hint"] = "Spotter se abre en el cuarto superior izquierdo de la pantalla y dibuja su texto y sus controles a un tamaño acorde con lo grande que es esa pantalla, no con cuántos píxeles tiene.",
+            ["Options.Size.Auto"] = "Ajustar a esta pantalla",
+            ["Options.Size.Auto.Detail"] = "Para su pantalla sale {0} %. Desmárquelo para fijar un tamaño propio.",
+            ["Options.Size.Percent"] = "{0} %",
+            ["Options.Size.Remember"] = "Recordar dónde deja la ventana",
+            ["Options.Size.Remember.Hint"] = "El tamaño, la posición y la maximización vuelven tal como los dejó. Lo único que nunca se guarda es una ventana que quede casi por completo fuera de la pantalla, porque ya no habría forma de arrastrarla de vuelta.",
+            ["Options.Size.Reset"] = "Restablecer tamaño y posición",
+            ["Options.Size.Reset.Tip"] = "Devuelve la ventana al cuarto superior izquierdo de la pantalla con su tamaño predeterminado, al instante.",
 
             ["Options.Storage"] = "Lo que esta aplicación guarda en su PC",
             ["Options.Storage.Hint"] = "No se escribe nada más en ningún sitio. Para quitarlo todo: borre los archivos de Spotter de estas dos carpetas y elimine la tarea de abajo.",

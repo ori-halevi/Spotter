@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Spotter.Localization;
 
 /// <summary>
 /// Arabic. Right to left, and the second such language here — which is the point: the direction
-/// work in MainWindow.xaml and PopupDirection is driven by <see cref="LanguageInfo.IsRightToLeft"/>
+/// work in MainWindow.xaml and PopupChrome is driven by <see cref="LanguageInfo.IsRightToLeft"/>
 /// rather than by anything Hebrew-specific, so this table needed no new plumbing.
 ///
 /// Terminology follows Windows in Arabic: سلة المحذوفات, مستكشف الملفات, منطقة الإعلامات,
@@ -83,7 +83,7 @@ internal static class StringsAr
             ["Toolbar.Recent"] = "الأخيرة",
             ["Toolbar.Recent.Tip"] = "عمليات البحث السابقة، الأحدث أولاً. والسهم لأسفل في مربع البحث يفتح القائمة نفسها.",
             ["Toolbar.Options"] = "خيارات",
-            ["Toolbar.Options.Tip"] = "اللغة وطريقة البحث ومفتاح الاختصار العام ورمز منطقة الإعلامات والمظهر.",
+            ["Toolbar.Options.Tip"] = "اللغة وطريقة البحث ومفتاح الاختصار العام ورمز منطقة الإعلامات والمظهر وحجم النافذة.",
 
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "الاسم: مطابقة حالة الأحرف",
@@ -331,6 +331,16 @@ internal static class StringsAr
             ["Options.Theme.Auto"] = "مثل Windows",
             ["Options.Theme.Dark"] = "داكن",
             ["Options.Theme.Light"] = "فاتح",
+
+            ["Options.Size"] = "حجم النافذة",
+            ["Options.Size.Hint"] = "يفتح Spotter في الربع العلوي الأيسر من الشاشة، ويرسم النصوص وعناصر التحكم بحجم يناسب حجم تلك الشاشة، لا عدد وحدات البكسل فيها.",
+            ["Options.Size.Auto"] = "الملاءمة لهذه الشاشة",
+            ["Options.Size.Auto.Detail"] = "شاشتك تعطي {0}%. أزل التحديد لتثبيت حجم من اختيارك.",
+            ["Options.Size.Percent"] = "{0}%",
+            ["Options.Size.Remember"] = "تذكّر المكان الذي تترك فيه النافذة",
+            ["Options.Size.Remember.Hint"] = "يعود الحجم والموضع والتكبير كما تركتها. الحالة الوحيدة التي لا تُحفظ أبدًا هي نافذة تُركت خارج الشاشة كلها تقريبًا، إذ لن يبقى سبيل لسحبها إلى الداخل مرة أخرى.",
+            ["Options.Size.Reset"] = "إعادة تعيين الحجم والموضع",
+            ["Options.Size.Reset.Tip"] = "يعيد النافذة فورًا إلى الربع العلوي الأيسر من الشاشة بحجمها الافتراضي.",
 
             ["Options.Storage"] = "ما يحفظه هذا التطبيق على جهازك",
             ["Options.Storage.Hint"] = "لا يُكتب أي شيء آخر في أي مكان. ولإزالة كل شيء: احذف ملفات Spotter من هذين المجلدين وأزل المهمة المذكورة أدناه.",

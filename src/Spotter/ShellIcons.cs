@@ -25,10 +25,33 @@ namespace Spotter;
 internal static class ShellIcons
 {
     private const uint SHGFI_ICON = 0x000000100;
+    private const uint SHGFI_LARGEICON = 0x000000000;
     private const uint SHGFI_SMALLICON = 0x000000001;
     private const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
     private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
     private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
+
+    /// <summary>
+    /// The row draws the icon in a 16-unit box. What that is in real pixels depends on the
+    /// interface scale, and asking the shell for its 16-pixel icon and then blowing it up is how a
+    /// crisp icon becomes a soft one.
+    /// </summary>
+    private const double NominalSize = 16;
+
+    /// <summary>
+    /// Above this many device pixels the small icon has run out of detail and the shell's large
+    /// one, drawn down to size, looks better. Just over 16 rather than exactly 16, because a hair
+    /// of upscaling is invisible and the 16-pixel icons are the ones drawn by hand for this size.
+    /// </summary>
+    private const double LargeIconThreshold = 20;
+
+    /// <summary>
+    /// Which of the shell's two sizes the cache currently holds. Recomputed — and the cache emptied
+    /// — whenever the interface scale changes, so rows realized after that get the sharper bitmap.
+    /// Rows already on screen keep the icon they were given until they are recycled by scrolling,
+    /// which is not worth forcing a full rebuild of the grid for.
+    /// </summary>
+    private static bool _large;
 
     private static readonly Dictionary<string, ImageSource> Cache =
         new Dictionary<string, ImageSource>(StringComparer.OrdinalIgnoreCase);
@@ -62,6 +85,30 @@ internal static class ShellIcons
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool DestroyIcon(IntPtr hIcon);
+
+    /// <summary>
+    /// Starts following the interface scale. Called once at startup; the cache is emptied only when
+    /// the answer actually changes, so nudging a slider through a dozen values costs one refill.
+    /// </summary>
+    public static void FollowScale()
+    {
+        Reconsider();
+        UiScale.Changed += Reconsider;
+    }
+
+    private static void Reconsider()
+    {
+        bool wanted = NominalSize * UiScale.Current * Displays.Primary.Scale > LargeIconThreshold;
+        lock (Gate)
+        {
+            if (wanted == _large)
+            {
+                return;
+            }
+            _large = wanted;
+            Cache.Clear();
+        }
+    }
 
     public static ImageSource Get(string name, bool isDirectory)
     {
@@ -106,7 +153,7 @@ internal static class ShellIcons
 
         IntPtr result = SHGetFileInfo(probe, attributes, ref info,
             (uint)Marshal.SizeOf<SHFILEINFO>(),
-            SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+            SHGFI_ICON | (_large ? SHGFI_LARGEICON : SHGFI_SMALLICON) | SHGFI_USEFILEATTRIBUTES);
 
         if (result == IntPtr.Zero || info.hIcon == IntPtr.Zero)
         {

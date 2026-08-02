@@ -18,6 +18,10 @@ public partial class OptionsWindow
         InitializeComponent();
         _settings = settings;
 
+        // Before anything is measured. This dialog is also the one place the scale can be changed,
+        // so it re-lays itself out along with the window behind it as the slider moves.
+        WindowLayout.Scale(this, RootLayout, new Size(460, 420));
+
         FillLanguages();
 
         if (Hotkey.TryParse(settings.RestoreHotkey, out ModifierKeys m, out Key k))
@@ -42,7 +46,13 @@ public partial class OptionsWindow
             _ => 0,
         };
 
+        FillScale();
         ShowStorageLocations();
+
+        // The two drop-downs open in their own windows, so the scale transform on this window's
+        // content does not reach them.
+        PopupChrome.ScaleDropDown(LanguageBox);
+        PopupChrome.ScaleDropDown(ThemeBox);
 
         // Text this window writes from code, re-rendered when the picker changes language. The
         // XAML looks after itself, because {loc:Loc} is a binding.
@@ -51,8 +61,30 @@ public partial class OptionsWindow
         {
             Lang.Changed -= Relocalize;
             RevertLanguageUnlessSaved();
+            RevertScaleUnlessSaved();
         };
     }
+
+    /// <summary>
+    /// Sizes this dialog against the screen it is about to open on rather than the one that
+    /// happened to be primary when it was constructed. By here the owner is set, and WPF has not
+    /// yet worked out where to centre it — so changing the size now still centres it correctly.
+    /// </summary>
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+
+        Rect area = Displays.For(Owner ?? this).WorkArea;
+        double scale = UiScale.Current;
+
+        Width = Math.Min(NominalWidth * scale, area.Width);
+        Height = Math.Min(NominalHeight * scale, area.Height * 0.94);
+    }
+
+    /// <summary>The size this dialog's content was laid out at, before the interface scale.</summary>
+    private const double NominalWidth = 560;
+
+    private const double NominalHeight = 820;
 
     // ---- language ----------------------------------------------------------------------------
 
@@ -172,7 +204,124 @@ public partial class OptionsWindow
             _languages[0].Label = SystemChoiceLabel();
         }
         UpdateLiveSearchHint();
+        UpdateScaleText();
         ShowStorageLocations();
+    }
+
+    // ---- interface size and window placement ---------------------------------------------------
+
+    /// <summary>
+    /// What the scale was when this window opened, so Cancel can undo the live preview — the same
+    /// arrangement as the language picker, and for the same reason.
+    /// </summary>
+    private double _scaleOnEntry;
+
+    /// <summary>
+    /// Suppresses the slider handler while the controls are being populated — and, because it
+    /// starts true, while the XAML itself is being loaded. Setting the slider's Minimum to 50
+    /// coerces its value up from 0, which raises ValueChanged at a point where the label the
+    /// handler writes to does not exist yet.
+    /// </summary>
+    private bool _fillingScale = true;
+
+    private void FillScale()
+    {
+        _fillingScale = true;
+        _scaleOnEntry = UiScale.Current;
+
+        ScaleSlider.Minimum = Math.Round(UiScale.Minimum * 100);
+        ScaleSlider.Maximum = Math.Round(UiScale.Maximum * 100);
+        // Whether or not the box is ticked, the slider starts at what is on screen now, so
+        // unticking it hands over the current size instead of jumping to some remembered one.
+        ScaleSlider.Value = Math.Round(UiScale.Current * 100);
+
+        AutoScaleBox.IsChecked = _settings.ScaleFollowsScreen;
+        RememberPlacementBox.IsChecked = _settings.RememberPlacement;
+
+        UpdateScaleEnabled();
+        UpdateScaleText();
+        _fillingScale = false;
+    }
+
+    private void OnAutoScaleToggled(object sender, RoutedEventArgs e)
+    {
+        if (_fillingScale)
+        {
+            return;
+        }
+
+        _fillingScale = true;
+        if (AutoScaleBox.IsChecked == true)
+        {
+            ScaleSlider.Value = Math.Round(UiScale.Automatic * 100);
+        }
+        _fillingScale = false;
+
+        UiScale.Apply(ScaleSlider.Value / 100);
+        UpdateScaleEnabled();
+        UpdateScaleText();
+    }
+
+    private void OnScaleSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_fillingScale)
+        {
+            return;
+        }
+        UiScale.Apply(e.NewValue / 100);
+        UpdateScaleText();
+    }
+
+    /// <summary>
+    /// Greys the slider and its percentage out while the scale is following the screen.
+    ///
+    /// The opacity is set by hand because <see cref="System.Windows.UIElement.IsEnabled"/> alone
+    /// changes nothing anyone can see: WPF-UI draws a disabled Slider exactly as it draws an
+    /// enabled one, so the control was live to the eye, dead to the mouse, and read as broken. The
+    /// number is dimmed with it rather than hidden — it is still saying what the scale is, and it
+    /// still moves when the automatic value does.
+    ///
+    /// Set on the row rather than through a Style, deliberately. An implicit Style for Slider here
+    /// would replace WPF-UI's, which is the trap documented in <see cref="PopupChrome"/>.
+    /// </summary>
+    private void UpdateScaleEnabled()
+    {
+        bool locked = AutoScaleBox.IsChecked != true;
+        ScaleRow.IsEnabled = locked;
+        ScaleRow.Opacity = locked ? 1.0 : 0.4;
+    }
+
+    private void UpdateScaleText()
+    {
+        // The slider itself is disabled under "scale to fit", but it still tracks the value, so the
+        // number beside it is right either way and moves on its own when the box is ticked.
+        ScaleValueText.Text = Lang.Tr("Options.Size.Percent", Math.Round(ScaleSlider.Value));
+        AutoScaleHint.Text = Lang.Tr("Options.Size.Auto.Detail",
+            Math.Round(UiScale.Automatic * 100));
+    }
+
+    /// <summary>
+    /// Puts the window behind this one back where a first run would have opened it, straight away
+    /// and whether or not this dialog is saved — it is a button that does a thing, like Remove
+    /// beside the scheduled task, not a setting waiting on Save.
+    /// </summary>
+    private void OnResetWindow(object sender, RoutedEventArgs e)
+    {
+        WindowLayout.Forget(_settings);
+        WindowLayout.ApplyDefault(Owner);
+    }
+
+    /// <summary>
+    /// Undoes the size preview when the dialog was dismissed rather than saved. See
+    /// <see cref="RevertLanguageUnlessSaved"/> — this hangs off Closed for the same reason, so that
+    /// the title bar's close button is not the one way out of here that changes something.
+    /// </summary>
+    private void RevertScaleUnlessSaved()
+    {
+        if (!Saved)
+        {
+            UiScale.Apply(_scaleOnEntry);
+        }
     }
 
     // ---- what the app leaves on the machine -------------------------------------------------
@@ -364,6 +513,11 @@ public partial class OptionsWindow
             2 => "Light",
             _ => "Auto",
         });
+
+        _settings.ScaleFollowsScreen = AutoScaleBox.IsChecked == true;
+        _settings.Scale = UiScale.Clamp(ScaleSlider.Value / 100);
+        _settings.RememberPlacement = RememberPlacementBox.IsChecked == true;
+
         _settings.Save();
         Saved = true;
         Close();

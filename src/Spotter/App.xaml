@@ -12,7 +12,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Tooltips and context menus need the reading direction set too, and it is emphatically
-                 NOT done here — see Localization/PopupDirection.cs. An implicit Style with a
+                 NOT done here — see PopupChrome.cs. An implicit Style with a
                  FlowDirection setter looks like the natural place for it and quietly replaces
                  WPF-UI's theming with stock light-grey WPF chrome. -->
         </ResourceDictionary>

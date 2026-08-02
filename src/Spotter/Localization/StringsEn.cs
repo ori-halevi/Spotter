@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Spotter.Localization;
 
@@ -65,7 +65,7 @@ internal static class StringsEn
             ["Toolbar.Recent"] = "Recent",
             ["Toolbar.Recent.Tip"] = "Searches you have run before, newest first. Down in the search box opens the same list.",
             ["Toolbar.Options"] = "Options",
-            ["Toolbar.Options.Tip"] = "Language, search mode, global hotkey, tray icon and theme.",
+            ["Toolbar.Options.Tip"] = "Language, search mode, global hotkey, tray icon, theme and window size.",
 
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "name: match case",
@@ -277,6 +277,16 @@ internal static class StringsEn
             ["Options.Theme.Auto"] = "Follow Windows",
             ["Options.Theme.Dark"] = "Dark",
             ["Options.Theme.Light"] = "Light",
+
+            ["Options.Size"] = "Window size",
+            ["Options.Size.Hint"] = "Spotter opens in the top-left quarter of your screen, and draws its text and controls at a size that suits how big that screen is — not how many pixels it has.",
+            ["Options.Size.Auto"] = "Match this screen",
+            ["Options.Size.Auto.Detail"] = "Your screen works out at {0}%. Untick to lock a size of your own.",
+            ["Options.Size.Percent"] = "{0}%",
+            ["Options.Size.Remember"] = "Remember where you leave the window",
+            ["Options.Size.Remember.Hint"] = "The size, the position and whether it was maximized all come back next time. A window left almost entirely off the screen is the one arrangement never kept, because there would be no way to drag it back.",
+            ["Options.Size.Reset"] = "Reset size and position",
+            ["Options.Size.Reset.Tip"] = "Puts the window back in the top-left quarter of the screen at its default size, straight away.",
 
             ["Options.Storage"] = "What this app stores on your PC",
             ["Options.Storage.Hint"] = "Nothing else is written anywhere. Removing all of it is: delete these two folders' Spotter files and remove the task below.",
