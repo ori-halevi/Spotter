@@ -204,33 +204,98 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>
-    /// Double-clicking the icon at the far end of the title bar closes the window — the gesture
-    /// Windows has attached to a window's system-menu icon for thirty years.
-    ///
-    /// Tested by position rather than by hit-testing the icon: whether the icon is the thing the
-    /// mouse reports depends on how WPF-UI happens to template it, and asking where the click
-    /// landed inside the icon does not. It is also mirror-safe, because a position taken inside an
-    /// element is in that element's own coordinates and RightToLeft has already been applied.
-    ///
-    /// Preview, so the title bar does not get to turn the same double-click into a maximize first.
-    /// </summary>
-    private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
+    // ---- the system-menu icon ----------------------------------------------------------------
+    //
+    // Double-clicking the icon at the far end of the title bar closes the window. Windows has
+    // attached that to a window's system-menu icon since version 3, and Spotter was maximizing
+    // instead.
+    //
+    // A WPF mouse handler cannot do this, which is what the first attempt got wrong. WPF-UI draws
+    // its own title bar through System.Windows.Shell.WindowChrome, and WindowChrome answers
+    // WM_NCHITTEST with HTCAPTION for that whole strip — so the caption is *non-client* as far as
+    // Windows is concerned, Windows itself handles the click, and no mouse event is ever raised
+    // for WPF to see. Marking the icon hit-test-visible-in-chrome would bring the events back, but
+    // only over the icon's opaque pixels: an .ico has transparent corners, and clicking one would
+    // fall through to the caption again.
+    //
+    // So it is answered where the question is actually asked. The icon's rectangle reports
+    // HTSYSMENU, and from there Windows does the rest for free and does it properly: one click
+    // opens the system menu, two close the window. The second message below is the fallback for
+    // the case where another hook has already claimed the hit test.
+
+    private const int WM_NCHITTEST = 0x0084;
+    private const int WM_NCLBUTTONDBLCLK = 0x00A3;
+    private const int HTCAPTION = 2;
+    private const int HTSYSMENU = 3;
+
+    protected override void OnSourceInitialized(EventArgs e)
     {
-        if (e.ClickCount != 2 || TitleIcon == null || TitleIcon.ActualWidth <= 0)
+        base.OnSourceInitialized(e);
+        if (PresentationSource.FromVisual(this) is System.Windows.Interop.HwndSource source)
         {
-            return;
+            source.AddHook(OnWindowMessage);
+        }
+    }
+
+    private IntPtr OnWindowMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam,
+                                   ref bool handled)
+    {
+        switch (message)
+        {
+            case WM_NCHITTEST when OnTitleIcon(lParam):
+                handled = true;
+                return (IntPtr)HTSYSMENU;
+
+            // Only when the hit test above did not take — with it, Windows closes the window on
+            // its own and this would be a second, redundant Close.
+            case WM_NCLBUTTONDBLCLK when (int)wParam == HTCAPTION && OnTitleIcon(lParam):
+                handled = true;
+                // Not inline: this runs inside a window message, and closing from in there means
+                // re-entering the message loop from the middle of one.
+                Dispatcher.BeginInvoke(new Action(Close));
+                return IntPtr.Zero;
+        }
+        return IntPtr.Zero;
+    }
+
+    /// <summary>
+    /// Whether a screen position packed into an lParam falls on the title bar's icon.
+    ///
+    /// The rectangle is taken from the icon itself through PointToScreen, so it follows the
+    /// interface scale without being told, and it is built from two opposite corners rather than a
+    /// corner and a size — under RightToLeft the element's own origin is its right-hand edge, and
+    /// <see cref="Rect"/> normalises that back into a rectangle either way.
+    /// </summary>
+    private bool OnTitleIcon(IntPtr lParam)
+    {
+        if (TitleIcon == null || TitleIcon.ActualWidth <= 0 || !TitleIcon.IsVisible)
+        {
+            return false;
         }
 
-        System.Windows.Point hit = e.GetPosition(TitleIcon);
-        if (hit.X < 0 || hit.Y < 0
-            || hit.X > TitleIcon.ActualWidth || hit.Y > TitleIcon.ActualHeight)
-        {
-            return;
-        }
+        // Signed: a window on a monitor left of the primary one has negative screen coordinates,
+        // and reading the halves as unsigned puts the pointer 65,000 pixels away.
+        int x = unchecked((short)(long)lParam);
+        int y = unchecked((short)((long)lParam >> 16));
 
-        e.Handled = true;
-        Close();
+        try
+        {
+            Rect icon = new Rect(
+                TitleIcon.PointToScreen(new System.Windows.Point(0, 0)),
+                TitleIcon.PointToScreen(
+                    new System.Windows.Point(TitleIcon.ActualWidth, TitleIcon.ActualHeight)));
+
+            // A couple of pixels of forgiveness. The target is 16 units square, and Windows is no
+            // stricter about its own.
+            icon.Inflate(2, 2);
+            return icon.Contains(new System.Windows.Point(x, y));
+        }
+        catch
+        {
+            // PointToScreen throws while the window has no source, which is exactly when there is
+            // nothing to close anyway.
+            return false;
+        }
     }
 
     private void OnOptions(object sender, RoutedEventArgs e)

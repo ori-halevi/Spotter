@@ -40,8 +40,8 @@ Spotter now fits your screen instead of filling it.
   state of the grid before any search had run, which is the first thing anyone sees.
 - **A long file name was cut off mid-letter** instead of ending in an ellipsis.
 - **Right-clicking a result needed two clicks** — the first only selected the row.
-- **Double-clicking the icon at the end of the title bar now closes the window**, as it does in
-  every other Windows program. It was maximizing instead.
+- **The icon at the end of the title bar is the system-menu button again** — click it for the
+  window menu, double-click it to close. It was maximizing instead.
 - **File icons are sharper** at scales above 100%, which is where the shell's 16-pixel icon runs
   out of detail.
 
@@ -104,8 +104,8 @@ Windows 10 (1809) or 11, 64-bit.
   להבאה לתצוגה. זה היה מצב הרשת לפני שרץ חיפוש כלשהו, כלומר הדבר הראשון שכל אחד רואה.
 - **שם קובץ ארוך נחתך באמצע אות** במקום להסתיים בשלוש נקודות.
 - **לחיצה ימנית על תוצאה דרשה שתי לחיצות** — הראשונה רק בחרה את השורה.
-- **לחיצה כפולה על האייקון שבקצה שורת הכותרת סוגרת עכשיו את החלון**, כמו בכל תוכנת Windows
-  אחרת. קודם היא הגדילה אותו למסך מלא.
+- **האייקון שבקצה שורת הכותרת חזר להיות כפתור תפריט החלון** — לחיצה פותחת את תפריט החלון,
+  לחיצה כפולה סוגרת. קודם היא הגדילה למסך מלא.
 - **אייקוני הקבצים חדים יותר** בקנה־מידה מעל 100%, שם נגמר הפירוט לאייקון של 16 פיקסלים
   שמערכת ההפעלה מספקת.
 

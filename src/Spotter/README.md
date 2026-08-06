@@ -679,15 +679,29 @@ selection it already had to make there. `ContextMenuOpening` still chooses too, 
 route in (Shift+F10 and the menu key, where there is no button press), and the list is given a menu
 in the constructor so the property is never null to begin with.
 
-### Double-clicking the title bar icon closes the window
+### The title bar icon is the system-menu button
 
-The gesture Windows has attached to a window's system-menu icon since Windows 3. WPF-UI's title bar
-does not implement it and treats the double-click as one on the bar, so it maximized instead.
+Double-clicking it closes the window, which Windows has attached to a window's system-menu icon
+since version 3. WPF-UI's title bar does not implement it and let the double-click through as one on
+the bar, so it maximized instead.
 
-Handled by *position* rather than by hit-testing the icon: whether the icon is the element the mouse
-reports depends on how WPF-UI happens to template it, and asking where inside the icon the click
-landed does not. It is mirror-safe for the same reason — a position taken inside an element is
-already in that element's own coordinates, so in Hebrew it follows the icon to the right-hand end.
+A WPF mouse handler cannot do this, and finding that out is the whole lesson. WPF-UI draws its title
+bar through `System.Windows.Shell.WindowChrome`, and WindowChrome answers `WM_NCHITTEST` with
+`HTCAPTION` across that strip — so as far as Windows is concerned the caption is *non-client*,
+Windows handles the click itself, and no mouse event is ever raised for WPF to see. Marking the icon
+`WindowChrome.IsHitTestVisibleInChrome` would bring the events back, but only over the icon's opaque
+pixels: an `.ico` has transparent corners, and a click on one falls through to the caption again.
+
+So it is answered where the question is actually asked. A hook on the window returns `HTSYSMENU` for
+the icon's rectangle, and Windows then does the rest properly and for free: one click opens the
+system menu, two close the window. `WM_NCLBUTTONDBLCLK` is handled as well, for the case where
+another hook claimed the hit test first.
+
+The rectangle comes from `PointToScreen` on the icon, so it follows the interface scale without
+being told, and it is built from two opposite corners rather than a corner and a size — under
+`RightToLeft` an element's own origin is its right-hand edge, and `Rect` normalises that either way.
+The lParam halves are read as **signed**: a window on a monitor to the left of the primary one has
+negative screen coordinates, and reading them unsigned puts the pointer 65,000 pixels away.
 
 ### The query fields
 

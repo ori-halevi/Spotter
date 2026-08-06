@@ -300,13 +300,11 @@
 
         <!-- Icon was explicitly nulled here, which is why the app showed one in the taskbar but
              nowhere inside its own chrome. -->
-        <!-- Double-clicking the icon closes the window, which is what double-clicking a window's
-             system-menu icon has done in Windows since Windows 3. WPF-UI's title bar does not
-             implement it, and treats the double-click as one on the bar itself — so it maximized
-             instead. Handled in code because the icon is a 16x16 target inside a bar that is
-             otherwise all drag-and-maximize. -->
-        <ui:TitleBar Grid.Row="0" Title="Spotter"
-                     PreviewMouseLeftButtonDown="OnTitleBarMouseDown">
+        <!-- The icon is named because the window's message hook needs its rectangle: it reports
+             itself to Windows as the system-menu button, so that one click opens the system menu
+             and two close the window. See "the system-menu icon" in MainWindow.xaml.cs for why
+             that cannot be a mouse handler here. -->
+        <ui:TitleBar Grid.Row="0" Title="Spotter">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon x:Name="TitleIcon"
                               Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
