@@ -1,4 +1,4 @@
-<ui:FluentWindow x:Class="Spotter.MainWindow"
+﻿<ui:FluentWindow x:Class="Spotter.MainWindow"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -124,6 +124,10 @@
             <MenuItem x:Name="NameRegex" Header="{loc:Loc Menu.Regex}" IsCheckable="True"
                       Click="OnNameOptionToggled"
                       ToolTip="{loc:Loc Menu.Regex.Name.Tip}" />
+            <Separator />
+            <MenuItem x:Name="NameFlexible" Header="{loc:Loc Menu.FlexibleSeparators}"
+                      IsCheckable="True" Click="OnNameOptionToggled"
+                      ToolTip="{loc:Loc Menu.FlexibleSeparators.Tip}" />
         </ContextMenu>
 
         <ContextMenu x:Key="FolderOptionsMenu" Opened="OnFolderOptionsOpened">
@@ -296,9 +300,16 @@
 
         <!-- Icon was explicitly nulled here, which is why the app showed one in the taskbar but
              nowhere inside its own chrome. -->
-        <ui:TitleBar Grid.Row="0" Title="Spotter">
+        <!-- Double-clicking the icon closes the window, which is what double-clicking a window's
+             system-menu icon has done in Windows since Windows 3. WPF-UI's title bar does not
+             implement it, and treats the double-click as one on the bar itself — so it maximized
+             instead. Handled in code because the icon is a 16x16 target inside a bar that is
+             otherwise all drag-and-maximize. -->
+        <ui:TitleBar Grid.Row="0" Title="Spotter"
+                     PreviewMouseLeftButtonDown="OnTitleBarMouseDown">
             <ui:TitleBar.Icon>
-                <ui:ImageIcon Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
+                <ui:ImageIcon x:Name="TitleIcon"
+                              Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
@@ -580,10 +591,6 @@
                         <Setter Property="ContextMenu" Value="{StaticResource HeaderMenu}" />
                         <Setter Property="ToolTip" Value="{loc:Loc Column.Tip}" />
                         <EventSetter Event="Click" Handler="OnColumnHeaderClick" />
-                        <!-- The gripper below is a Thumb, and DragCompleted bubbles from it to
-                             here. It is how the app learns that the user has taken the column
-                             widths over by hand, which switches off the automatic share-out. -->
-                        <EventSetter Event="Thumb.DragCompleted" Handler="OnColumnResized" />
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="GridViewColumnHeader">

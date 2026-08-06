@@ -42,7 +42,7 @@ internal static class StringsAr
             ["Field.Name.Tip.Wildcards"] = "حرفا البدل * و؟ يعملان داخل كل كلمة على حدة:  "
                                            + L + "*.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "السهم لأسفل يفتح عمليات البحث الأخيرة. Enter يبحث فورًا دون انتظار توقف الكتابة.",
-            ["Field.Name.OptionsTip"] = "خيارات اسم الملف: مطابقة حالة الأحرف، تعبير عادي.",
+            ["Field.Name.OptionsTip"] = "خيارات اسم الملف: مطابقة حالة الأحرف، تعبير عادي، طريقة معاملة الفواصل.",
 
             ["Field.Folder.Placeholder"] = "في المجلد",
             ["Field.Folder.Tip.Title"] = "في المجلد",
@@ -88,6 +88,7 @@ internal static class StringsAr
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "الاسم: مطابقة حالة الأحرف",
             ["Active.Name.Regex"] = "الاسم: تعبير عادي",
+            ["Active.Name.ExactSeparators"] = "الاسم: فواصل مطابقة",
             ["Active.Folder.Case"] = "المجلد: مطابقة حالة الأحرف",
             ["Active.Folder.Regex"] = "المجلد: تعبير عادي",
             ["Active.NoSubfolders"] = "بدون مجلدات فرعية",
@@ -122,6 +123,8 @@ internal static class StringsAr
             ["Menu.Regex"] = "تعبير عادي",
             ["Menu.Regex.Name.Tip"] = "تعبير عادي في " + L + ".NET على اسم الملف. ويتوقف عندها تقسيم الكلمات وحرفا البدل * و؟.",
             ["Menu.Regex.Folder.Tip"] = "تعبير عادي في " + L + ".NET على مسار المجلد. ويجب استخدام حرف تخطٍّ قبل الشرطات المائلة العكسية — وزر الاستعراض يفعل ذلك عنك.",
+            ["Menu.FlexibleSeparators"] = "النقاط والشرطات تُعامَل كمسافات",
+            ["Menu.FlexibleSeparators.Tip"] = "مفعّل: البحث عن 'Family.Guy' يجد أيضًا 'Family Guy' و'Family_Guy'، لأن النقطة أو الشرطة السفلية أو الشرطة بين كلمتين تُعدّ فاصلًا. معطّل: يجب أن يكون التو نفسه الذي كتبته تمامًا.",
             ["Menu.Subfolders"] = "تضمين المجلدات الفرعية",
             ["Menu.Subfolders.Tip"] = "مفعّل: يطابق أي مجلد أعلى الملف. متوقف: يجب أن يطابق مجلد الملف نفسه.",
 

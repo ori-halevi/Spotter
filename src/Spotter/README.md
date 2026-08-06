@@ -580,6 +580,33 @@ Three things a list is expected to do that this one did not:
   `PART_HeaderGripper` — the Thumb that `GridViewColumnHeader` looks up by name to implement
   resizing. Restoring it brings back dragging and double-click-to-fit.
 
+### Separators in the file name are a gap, not a character
+
+The engine splits the name query on spaces and tabs and requires every word as a substring —
+`GClass168.smethod_1`, which is the 1.5.1 app's own splitter, unchanged. That already makes
+`family guy` find `Family.Guy.S01E01.mkv`: both words are in it. What it did not do is the reverse.
+Type the name the way the file actually spells it, `Family.Guy`, and it became one literal substring
+that the spaced-out copy of the same show does not contain.
+
+Which is backwards. Whether a release used dots, underscores or spaces is an accident of whoever
+packed it, and nobody searching for it is trying to express a preference about it. So
+`SearchQuery.EffectiveFilename` rewrites those separators into the spaces the engine already
+understands, before it ever sees the query. No engine code changes and the fast substring matchers
+are kept — a regular expression per file over a 309,000-hit result set is not the same thing at all.
+
+It rewrites one whitespace-delimited word at a time and leaves a word alone unless splitting it is
+unambiguously what was meant. Three guards, each earning its place:
+
+| Input | Becomes | Why |
+|---|---|---|
+| `Family.Guy` | `Family Guy` | the case this exists for |
+| `Wi-Fi` | `Wi Fi` | finds `WiFi`, `Wi-Fi`, `Wi Fi` |
+| `*.dll` | unchanged | a wildcard pattern; the engine has its own meaning for it |
+| `.dll` | unchanged | leading separator is a character, not a gap — splitting would widen it to every name containing "dll" |
+| `v1.5` | unchanged | would break into a one-character piece, and a bare `5` matches most of a disk |
+
+Off by a tick in the name field's options menu, which is where the per-field behaviour lives.
+
 ### The columns share out the window
 
 All seven columns divide the width of the results list between them, and they do it again every
@@ -597,14 +624,25 @@ wrong one. So the three date columns hold enough for the widest common short for
 and path take what is left, and the shares then send almost all the growth from a wider window back
 to those two.
 
+The date floor is **measured**, not written down. `12/30/2026 10:58 PM` and `30.12.2026 22:58`
+differ by about a third, and a figure picked to be safe for the widest of them would take that third
+out of the name column in every locale that does not need it. So it is measured with `FormattedText`
+in the grid's own font and the user's own regional format — a separate Windows setting from the
+display language, which `Lang.Use` deliberately leaves alone, so it never changes while the app runs.
+
 `RowChrome` comes off the top: each row is a `Border` carrying the `ListViewItem` style's
 `Margin="2,1"` and `Padding="6,4"`, sixteen units the columns never see. Forgetting it puts a
-horizontal scrollbar under a grid that looks like it fits.
+horizontal scrollbar under a grid that looks like it fits. And when even the floors do not fit — a
+wide date format at the default window size — they are all squeezed proportionally rather than
+allowed to overflow, because a slightly tight date is worth more than a column pushed off an edge
+there may be nothing to scroll it back from.
 
-Dragging any column edge — `Thumb.DragCompleted`, which bubbles from `PART_HeaderGripper` to the
-header — turns the whole thing off and hands the widths to the user, because auto-fit and a dragged
-width cannot both be true and the one done by hand wins. **Reset all column widths** turns it back
-on. `Fit this column to its contents` also turns it off, for the same reason: it is a decision about
+The handover to the user watches `GridViewColumn.Width` itself, through a
+`DependencyPropertyDescriptor`, rather than the gesture. The obvious route — the gripper's
+`DragCompleted`, which bubbles to the header — misses two ways: `GridViewColumnHeader` marks that
+event handled on its way past, so a style `EventSetter` never sees it, and double-clicking the
+gripper to size a column to its contents is not a drag at all. Every one of them ends up writing
+`Width`. **Reset all column widths** hands it back. `Fit this column to its contents` also turns it off, for the same reason: it is a decision about
 one column, and the next window resize would otherwise undo it silently.
 
 The name cell is a `DockPanel` rather than a `StackPanel`, which matters only now that the column
@@ -628,6 +666,28 @@ The query fields used to fall back to the stock Cut/Copy/Paste, which is a text-
 search box — the editing commands are still there, joined by the ones that are about searching.
 The filter row and the column headers had no menu at all; they now offer what you would want from
 them, including the column-width commands that a header drag cannot express.
+
+### A right-click has to open a menu on the first click
+
+WPF works out whether there is a menu to open *before* it raises `ContextMenuOpening`. A
+`ContextMenu` assigned only inside that handler is therefore assigned one click too late: the first
+right-click found null and opened nothing, and the second found what the first had left behind — so
+the gesture read as "click once to select, again for the menu".
+
+The menu is now chosen on the button going down, in `OnResultsRightButtonDown`, alongside the
+selection it already had to make there. `ContextMenuOpening` still chooses too, for the keyboard
+route in (Shift+F10 and the menu key, where there is no button press), and the list is given a menu
+in the constructor so the property is never null to begin with.
+
+### Double-clicking the title bar icon closes the window
+
+The gesture Windows has attached to a window's system-menu icon since Windows 3. WPF-UI's title bar
+does not implement it and treats the double-click as one on the bar, so it maximized instead.
+
+Handled by *position* rather than by hit-testing the icon: whether the icon is the element the mouse
+reports depends on how WPF-UI happens to template it, and asking where inside the icon the click
+landed does not. It is mirror-safe for the same reason — a position taken inside an element is
+already in that element's own coordinates, so in Hebrew it follows the icon to the right-hand end.
 
 ### The query fields
 

@@ -122,6 +122,13 @@ public sealed class UiSettings
     public bool FolderMatchCase { get; set; }
     public bool FolderRegex { get; set; }
 
+    /// <summary>
+    /// Whether a dot, underscore or hyphen typed in the file name counts as a gap between words.
+    /// On by default — see <see cref="SearchQuery.EffectiveFilename"/> for why that is the useful
+    /// way round.
+    /// </summary>
+    public bool FlexibleSeparators { get; set; } = true;
+
     public bool Subfolders { get; set; } = true;
     public bool IncludeFiles { get; set; } = true;
     public bool IncludeFolders { get; set; } = true;

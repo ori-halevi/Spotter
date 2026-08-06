@@ -50,7 +50,7 @@ internal static class StringsHe
             ["Field.Name.Tip.Wildcards"] = "התווים הכלליים * ו־? פועלים לכל מילה בנפרד:  "
                                            + L + "*.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "חץ למטה פותח את החיפושים האחרונים. Enter מחפש מיד, בלי להמתין להפסקת ההקלדה.",
-            ["Field.Name.OptionsTip"] = "אפשרויות לשם הקובץ: התאמת רישיות, ביטוי רגולרי.",
+            ["Field.Name.OptionsTip"] = "אפשרויות לשם הקובץ: התאמת רישיות, ביטוי רגולרי, איך מתייחסים למפרידים.",
 
             ["Field.Folder.Placeholder"] = "בתיקייה",
             ["Field.Folder.Tip.Title"] = "בתיקייה",
@@ -95,6 +95,7 @@ internal static class StringsHe
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "שם: התאמת רישיות",
             ["Active.Name.Regex"] = "שם: ביטוי רגולרי",
+            ["Active.Name.ExactSeparators"] = "שם: מפרידים מדויקים",
             ["Active.Folder.Case"] = "תיקייה: התאמת רישיות",
             ["Active.Folder.Regex"] = "תיקייה: ביטוי רגולרי",
             ["Active.NoSubfolders"] = "בלי תיקיות משנה",
@@ -129,6 +130,8 @@ internal static class StringsHe
             ["Menu.Regex"] = "ביטוי רגולרי",
             ["Menu.Regex.Name.Tip"] = "ביטוי רגולרי של " + L + ".NET על שם הקובץ. חלוקה למילים והתווים הכלליים * ו־? מפסיקים לפעול.",
             ["Menu.Regex.Folder.Tip"] = "ביטוי רגולרי של " + L + ".NET על נתיב התיקייה. יש להשתמש בתו בריחה לפני קווים נטויים הפוכים — כפתור העיון עושה זאת בשבילך.",
+            ["Menu.FlexibleSeparators"] = "נקודות ומקפים נחשבים לרווחים",
+            ["Menu.FlexibleSeparators.Tip"] = "דולק: החיפוש 'Family.Guy' מוצא גם 'Family Guy' וגם 'Family_Guy', כי נקודה, קו תחתון או מקף בין שתי מילים נחשבים להפרדה. כבוי: הם חייבים להיות בדיוק התו שהקלדת.",
             ["Menu.Subfolders"] = "לכלול תיקיות משנה",
             ["Menu.Subfolders.Tip"] = "פעיל: התאמה לכל תיקייה מעל הקובץ. כבוי: התיקייה של הקובץ עצמו חייבת להתאים.",
 

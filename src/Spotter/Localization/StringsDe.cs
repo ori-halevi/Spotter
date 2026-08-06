@@ -25,7 +25,7 @@ internal static class StringsDe
             ["Field.Name.Tip.Words"] = "Mehrere Wörter müssen alle vorkommen, in beliebiger Reihenfolge:  log 2024",
             ["Field.Name.Tip.Wildcards"] = "Die Platzhalter * und ? gelten je Wort:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "Pfeil nach unten öffnet die letzten Suchen. Enter sucht sofort, ohne die Tipppause abzuwarten.",
-            ["Field.Name.OptionsTip"] = "Optionen für den Dateinamen: Groß-/Kleinschreibung, regulärer Ausdruck.",
+            ["Field.Name.OptionsTip"] = "Optionen für den Dateinamen: Groß-/Kleinschreibung, regulärer Ausdruck, Umgang mit Trennzeichen.",
 
             ["Field.Folder.Placeholder"] = "In Ordner",
             ["Field.Folder.Tip.Title"] = "In Ordner",
@@ -64,6 +64,7 @@ internal static class StringsDe
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "Name: Groß-/Kleinschreibung",
             ["Active.Name.Regex"] = "Name: Regex",
+            ["Active.Name.ExactSeparators"] = "Name: exakte Trennzeichen",
             ["Active.Folder.Case"] = "Ordner: Groß-/Kleinschreibung",
             ["Active.Folder.Regex"] = "Ordner: Regex",
             ["Active.NoSubfolders"] = "ohne Unterordner",
@@ -98,6 +99,8 @@ internal static class StringsDe
             ["Menu.Regex"] = "Regulärer Ausdruck",
             ["Menu.Regex.Name.Tip"] = "Ein .NET-regulärer Ausdruck auf den Dateinamen. Wortweise Suche und die Platzhalter * und ? gelten dann nicht mehr.",
             ["Menu.Regex.Folder.Tip"] = "Ein .NET-regulärer Ausdruck auf den Ordnerpfad. Backslashes müssen maskiert werden — die Schaltfläche Durchsuchen erledigt das für Sie.",
+            ["Menu.FlexibleSeparators"] = "Punkte und Bindestriche gelten als Leerzeichen",
+            ["Menu.FlexibleSeparators.Tip"] = "Ein: 'Family.Guy' findet auch 'Family Guy' und 'Family_Guy', denn ein Punkt, ein Unterstrich oder ein Bindestrich zwischen zwei Wörtern gilt als Trennung. Aus: Es muss genau das eingegebene Zeichen sein.",
             ["Menu.Subfolders"] = "Unterordner einbeziehen",
             ["Menu.Subfolders.Tip"] = "Ein: jeder Ordner oberhalb der Datei darf passen. Aus: der Ordner der Datei selbst muss passen.",
 

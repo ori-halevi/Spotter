@@ -25,7 +25,7 @@ internal static class StringsEs
             ["Field.Name.Tip.Words"] = "Si escribe varias palabras, deben aparecer todas, en cualquier orden:  log 2024",
             ["Field.Name.Tip.Wildcards"] = "Los comodines * y ? se aplican a cada palabra:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "La flecha abajo abre las búsquedas recientes. Entrar busca ya, sin esperar la pausa de escritura.",
-            ["Field.Name.OptionsTip"] = "Opciones del nombre de archivo: mayúsculas y minúsculas, expresión regular.",
+            ["Field.Name.OptionsTip"] = "Opciones del nombre de archivo: mayúsculas y minúsculas, expresión regular, cómo se tratan los separadores.",
 
             ["Field.Folder.Placeholder"] = "En la carpeta",
             ["Field.Folder.Tip.Title"] = "En la carpeta",
@@ -64,6 +64,7 @@ internal static class StringsEs
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "nombre: mayúsculas y minúsculas",
             ["Active.Name.Regex"] = "nombre: expresión regular",
+            ["Active.Name.ExactSeparators"] = "nombre: separadores exactos",
             ["Active.Folder.Case"] = "carpeta: mayúsculas y minúsculas",
             ["Active.Folder.Regex"] = "carpeta: expresión regular",
             ["Active.NoSubfolders"] = "sin subcarpetas",
@@ -98,6 +99,8 @@ internal static class StringsEs
             ["Menu.Regex"] = "Expresión regular",
             ["Menu.Regex.Name.Tip"] = "Una expresión regular de .NET sobre el nombre de archivo. La búsqueda por palabras y los comodines * y ? dejan de aplicarse.",
             ["Menu.Regex.Folder.Tip"] = "Una expresión regular de .NET sobre la ruta de la carpeta. Las barras invertidas hay que escaparlas — el botón Examinar lo hace por usted.",
+            ["Menu.FlexibleSeparators"] = "Los puntos y guiones cuentan como espacios",
+            ["Menu.FlexibleSeparators.Tip"] = "Activado: 'Family.Guy' encuentra también 'Family Guy' y 'Family_Guy', porque un punto, un guion bajo o un guion entre dos palabras se toma como separación. Desactivado: tiene que ser exactamente el carácter que escribió.",
             ["Menu.Subfolders"] = "Incluir subcarpetas",
             ["Menu.Subfolders.Tip"] = "Activado: vale cualquier carpeta por encima del archivo. Desactivado: debe coincidir la carpeta del propio archivo.",
 

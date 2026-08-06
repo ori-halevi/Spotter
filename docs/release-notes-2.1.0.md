@@ -26,7 +26,11 @@ Spotter now fits your screen instead of filling it.
   the screen — there would be no way to drag it back.
 - **All seven columns now share out the width of the window**, so every one of them is on screen
   with its name whatever size the window is. Dragging any column edge hands the widths back to
-  you for good; **Reset all column widths** returns them to sharing.
+  you for good — and they are remembered; **Reset all column widths** returns them to sharing.
+- **A dot, an underscore or a hyphen in the file name counts as a gap between words.** Searching
+  `Family.Guy` now also finds `Family Guy` and `Family_Guy`, because which one a file used is an
+  accident of whoever named it. `*.dll`, `.dll` and `v1.5` are left exactly as typed, and the whole
+  thing can be switched off in the file name's own options menu.
 
 ### Fixed
 
@@ -35,6 +39,9 @@ Spotter now fits your screen instead of filling it.
   scroll — and the columns that did not fit simply could not be brought into view. That was the
   state of the grid before any search had run, which is the first thing anyone sees.
 - **A long file name was cut off mid-letter** instead of ending in an ellipsis.
+- **Right-clicking a result needed two clicks** — the first only selected the row.
+- **Double-clicking the icon at the end of the title bar now closes the window**, as it does in
+  every other Windows program. It was maximizing instead.
 - **File icons are sharper** at scales above 100%, which is where the shell's 16-pixel icon runs
   out of detail.
 
@@ -85,7 +92,10 @@ Windows 10 (1809) or 11, 64-bit.
   מקום. המצב היחיד שלעולם לא נשמר הוא חלון שנשאר כמעט לגמרי מחוץ למסך — לא הייתה שום דרך
   לגרור אותו בחזרה.
 - **שבע העמודות מתחלקות ברוחב החלון**, כך שכולן על המסך עם השם שלהן בכל גודל חלון. גרירה של
-  גבול עמודה מוסרת לך את השליטה לתמיד; **איפוס רוחב כל העמודות** מחזיר את החלוקה.
+  גבול עמודה מוסרת לך את השליטה לתמיד — והרוחב נשמר; **איפוס רוחב כל העמודות** מחזיר את החלוקה.
+- **נקודה, קו תחתון או מקף בשם הקובץ נחשבים להפרדה בין מילים.** חיפוש `Family.Guy` מוצא עכשיו
+  גם `Family Guy` וגם `Family_Guy`, כי איזה מהם קובץ משתמש בו הוא מקרי לגמרי. `*.dll`, `.dll`
+  ו־`v1.5` נשארים בדיוק כפי שהוקלדו, ואפשר לכבות את כל העניין בתפריט האפשרויות של שדה השם.
 
 ### תוקן
 
@@ -93,6 +103,9 @@ Windows 10 (1809) or 11, 64-bit.
   מגיע מהשורות, ולכן ברשימה ריקה לא היה מה לגלול — והעמודות שלא נכנסו פשוט לא ניתנות היו
   להבאה לתצוגה. זה היה מצב הרשת לפני שרץ חיפוש כלשהו, כלומר הדבר הראשון שכל אחד רואה.
 - **שם קובץ ארוך נחתך באמצע אות** במקום להסתיים בשלוש נקודות.
+- **לחיצה ימנית על תוצאה דרשה שתי לחיצות** — הראשונה רק בחרה את השורה.
+- **לחיצה כפולה על האייקון שבקצה שורת הכותרת סוגרת עכשיו את החלון**, כמו בכל תוכנת Windows
+  אחרת. קודם היא הגדילה אותו למסך מלא.
 - **אייקוני הקבצים חדים יותר** בקנה־מידה מעל 100%, שם נגמר הפירוט לאייקון של 16 פיקסלים
   שמערכת ההפעלה מספקת.
 

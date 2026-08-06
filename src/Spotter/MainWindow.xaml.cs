@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -43,6 +43,11 @@ public partial class MainWindow
         // appears and takes some of it away.
         ResultsList.AddHandler(System.Windows.Controls.ScrollViewer.ScrollChangedEvent,
             new System.Windows.Controls.ScrollChangedEventHandler(OnResultsScrollChanged));
+
+        // Never null from here on. WPF reads this property to decide whether a right-click has a
+        // menu to open, and it reads it before raising ContextMenuOpening — so a list that starts
+        // with none swallows the first right-click of the session however good the handler is.
+        ResultsList.ContextMenu = (System.Windows.Controls.ContextMenu)Resources["BackgroundMenu"];
 
         // Searching on every keystroke would restart the engine mid-flight while someone is
         // still typing a word. A short idle gap is enough to feel live without the churn.
@@ -199,6 +204,35 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>
+    /// Double-clicking the icon at the far end of the title bar closes the window — the gesture
+    /// Windows has attached to a window's system-menu icon for thirty years.
+    ///
+    /// Tested by position rather than by hit-testing the icon: whether the icon is the thing the
+    /// mouse reports depends on how WPF-UI happens to template it, and asking where the click
+    /// landed inside the icon does not. It is also mirror-safe, because a position taken inside an
+    /// element is in that element's own coordinates and RightToLeft has already been applied.
+    ///
+    /// Preview, so the title bar does not get to turn the same double-click into a maximize first.
+    /// </summary>
+    private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2 || TitleIcon == null || TitleIcon.ActualWidth <= 0)
+        {
+            return;
+        }
+
+        System.Windows.Point hit = e.GetPosition(TitleIcon);
+        if (hit.X < 0 || hit.Y < 0
+            || hit.X > TitleIcon.ActualWidth || hit.Y > TitleIcon.ActualHeight)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        Close();
+    }
+
     private void OnOptions(object sender, RoutedEventArgs e)
     {
         OptionsWindow dialog = new OptionsWindow(_settings) { Owner = this };
@@ -288,6 +322,7 @@ public partial class MainWindow
 
         _nameMatchCase = _settings.MatchCase;
         _nameRegex = _settings.Regex;
+        _nameFlexible = _settings.FlexibleSeparators;
         _folderMatchCase = _settings.FolderMatchCase;
         _folderRegex = _settings.FolderRegex;
         _subfolders = _settings.Subfolders;
@@ -318,6 +353,10 @@ public partial class MainWindow
             }
         }
         UpdateHeaderArrows();
+
+        // After the stored widths are in place, so restoring them is not mistaken for the user
+        // reaching for a column edge.
+        WatchColumnWidths();
     }
 
     private void SaveSettings()
@@ -333,6 +372,7 @@ public partial class MainWindow
 
         _settings.MatchCase = _nameMatchCase;
         _settings.Regex = _nameRegex;
+        _settings.FlexibleSeparators = _nameFlexible;
         _settings.FolderMatchCase = _folderMatchCase;
         _settings.FolderRegex = _folderRegex;
         _settings.Subfolders = _subfolders;
@@ -1120,6 +1160,7 @@ public partial class MainWindow
         Size = SizeBox.Text,
         FilenameIgnoreCase = !_nameMatchCase,
         FilenameRegex = _nameRegex,
+        FlexibleSeparators = _nameFlexible,
         DirectoryIgnoreCase = !_folderMatchCase,
         DirectoryRegex = _folderRegex,
         IncludeSubdirectories = _subfolders,
@@ -1831,28 +1872,50 @@ public partial class MainWindow
     /// below the last row used to open the file menu and act on whatever was still selected
     /// somewhere out of sight, which is indistinguishable from acting on the wrong file.
     /// </summary>
-    private void OnResultsContextMenuOpening(object sender, System.Windows.Controls.ContextMenuEventArgs e)
+    /// <summary>
+    /// Picks the menu that suits what is under the pointer: the one about a file, or the one about
+    /// the list. Kept in one place because it has to be called from two, for the reason on
+    /// <see cref="OnResultsRightButtonDown"/>.
+    /// </summary>
+    private void ChooseResultsMenu(System.Windows.Controls.ListViewItem row)
     {
-        ResultsList.ContextMenu = RowUnderPointer() != null && Selected.Any()
+        ResultsList.ContextMenu = row != null && Selected.Any()
             ? (System.Windows.Controls.ContextMenu)Resources["ResultsMenu"]
             : (System.Windows.Controls.ContextMenu)Resources["BackgroundMenu"];
     }
 
     /// <summary>
+    /// The keyboard route in — Shift+F10 and the menu key — where there is no button press to hang
+    /// the choice off. Also the safety net: WPF looks the menu up on the way past, so leaving it
+    /// null between clicks is what made a right-click do nothing at all.
+    /// </summary>
+    private void OnResultsContextMenuOpening(object sender, System.Windows.Controls.ContextMenuEventArgs e)
+    {
+        ChooseResultsMenu(RowUnderPointer());
+    }
+
+    /// <summary>
     /// Right-clicking a row that is not selected selects it first — the rule Explorer uses, and
     /// the only way the menu that follows can be about the row that was clicked.
+    ///
+    /// The menu is chosen here too, on the button going *down*, and that is the fix for a
+    /// right-click that only selected and showed nothing until you clicked again. WPF decides
+    /// whether there is a menu to open before it raises ContextMenuOpening, so a ContextMenu that
+    /// is only assigned inside that handler is assigned one click too late: the first right-click
+    /// found null and opened nothing, and the second found what the first had left behind.
     /// </summary>
     private void OnResultsRightButtonDown(object sender, MouseButtonEventArgs e)
     {
         System.Windows.Controls.ListViewItem row =
             FindAncestor<System.Windows.Controls.ListViewItem>(e.OriginalSource as DependencyObject);
-        if (row == null || row.IsSelected)
+
+        if (row != null && !row.IsSelected)
         {
-            return;
+            ResultsList.SelectedItems.Clear();
+            row.IsSelected = true;
+            UpdateSelectionText(null);
         }
-        ResultsList.SelectedItems.Clear();
-        row.IsSelected = true;
-        UpdateSelectionText(null);
+        ChooseResultsMenu(row);
     }
 
     private System.Windows.Controls.ListViewItem RowUnderPointer()
@@ -1973,6 +2036,7 @@ public partial class MainWindow
 
     private bool _nameMatchCase;
     private bool _nameRegex;
+    private bool _nameFlexible = true;
     private bool _folderMatchCase;
     private bool _folderRegex;
     private bool _subfolders = true;
@@ -1995,6 +2059,13 @@ public partial class MainWindow
     {
         Tick(sender, "NameMatchCase", _nameMatchCase);
         Tick(sender, "NameRegex", _nameRegex);
+        Tick(sender, "NameFlexible", _nameFlexible);
+
+        // Meaningless in regex mode: the pattern says for itself what a dot is allowed to be.
+        if (Item(sender, "NameFlexible") is System.Windows.Controls.MenuItem flexible)
+        {
+            flexible.IsEnabled = !_nameRegex;
+        }
     }
 
     private void OnFolderOptionsOpened(object sender, RoutedEventArgs e)
@@ -2012,6 +2083,7 @@ public partial class MainWindow
         }
         if (item.Name == "NameMatchCase") _nameMatchCase = item.IsChecked;
         else if (item.Name == "NameRegex") _nameRegex = item.IsChecked;
+        else if (item.Name == "NameFlexible") _nameFlexible = item.IsChecked;
         AfterOptionChange();
     }
 
@@ -2046,6 +2118,7 @@ public partial class MainWindow
         List<string> parts = new List<string>();
         if (_nameMatchCase) parts.Add(Lang.Tr("Active.Name.Case"));
         if (_nameRegex) parts.Add(Lang.Tr("Active.Name.Regex"));
+        else if (!_nameFlexible) parts.Add(Lang.Tr("Active.Name.ExactSeparators"));
         if (_folderMatchCase) parts.Add(Lang.Tr("Active.Folder.Case"));
         if (_folderRegex) parts.Add(Lang.Tr("Active.Folder.Regex"));
         if (!_subfolders) parts.Add(Lang.Tr("Active.NoSubfolders"));
@@ -2376,19 +2449,81 @@ public partial class MainWindow
     /// better with more room. A date column that is wide enough is finished; it does not become
     /// more informative at twice the width, and the space is wanted elsewhere.
     /// </summary>
-    private static readonly double[] ColumnShares = { 400, 420, 60, 90, 40, 90, 90 };
+    private static readonly double[] ColumnShares = { 480, 420, 60, 90, 40, 90, 90 };
 
     /// <summary>
-    /// What each column gets before any of that is shared out.
+    /// What each column gets before any of that is shared out. The three date columns are not here
+    /// because their floor is measured rather than guessed — see <see cref="Floors"/>.
     ///
     /// These are what the content needs rather than what looks balanced, and the difference is the
     /// point: a name or a path that runs out of room ends in an ellipsis and is still doing its
     /// job, because the eye only needs the start of it. A date that runs out of room reads
-    /// "12/17/2024 3:38 A", which is not a shorter date — it is a wrong one. So the three date
-    /// columns hold enough for the widest common short format, and the name and path take what is
-    /// left over.
+    /// "12/17/2024 3:38 A", which is not a shorter date — it is a wrong one. So the dates hold
+    /// their ground and the name takes the lion's share of everything above that.
     /// </summary>
-    private static readonly double[] ColumnFloors = { 130, 130, 80, 155, 50, 155, 155 };
+    private static readonly double[] StaticFloors = { 200, 120, 80, 0, 50, 0, 0 };
+
+    /// <summary>
+    /// The floors, with the measured date width filled in at the three date columns.
+    /// </summary>
+    private double[] Floors()
+    {
+        double date = DateColumnFloor();
+        double[] floors = (double[])StaticFloors.Clone();
+        floors[3] = date;      // modified
+        floors[5] = date;      // created
+        floors[6] = date;      // accessed
+        return floors;
+    }
+
+    private double _dateFloor;
+
+    /// <summary>
+    /// How much room a date actually needs, measured in the font the grid is drawn in and the
+    /// format the user's Windows is set to.
+    ///
+    /// Measured rather than written down, because the number is not a constant. "12/30/2026 10:58
+    /// PM" and "30.12.2026 22:58" differ by about a third, and a figure picked to be safe for the
+    /// widest of them would take that third out of the name column in every locale that does not
+    /// need it. The regional format is a separate Windows setting from the display language — see
+    /// <c>Lang.Use</c>, which deliberately leaves it alone — so this follows the format, not the
+    /// translation, and never changes while the app runs.
+    /// </summary>
+    private double DateColumnFloor()
+    {
+        if (_dateFloor > 0)
+        {
+            return _dateFloor;
+        }
+
+        // A deliberately wide date: two-digit day and month, and a PM time so the formats that
+        // print a meridiem are measured with one.
+        string widest = new DateTime(2026, 12, 30, 22, 58, 0)
+            .ToString("g", CultureInfo.CurrentCulture);
+
+        System.Windows.Media.Typeface face = new System.Windows.Media.Typeface(
+            System.Windows.Documents.TextElement.GetFontFamily(ResultsList),
+            System.Windows.Documents.TextElement.GetFontStyle(ResultsList),
+            System.Windows.Documents.TextElement.GetFontWeight(ResultsList),
+            System.Windows.Documents.TextElement.GetFontStretch(ResultsList));
+
+        System.Windows.Media.FormattedText measured = new System.Windows.Media.FormattedText(
+            widest, CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight, face,
+            System.Windows.Documents.TextElement.GetFontSize(ResultsList),
+            System.Windows.Media.Brushes.Black,
+            System.Windows.Media.VisualTreeHelper.GetDpi(ResultsList).PixelsPerDip);
+
+        // Clamped so that a missing font or an exotic format cannot hand the grid a floor that
+        // crowds every other column out.
+        _dateFloor = Math.Clamp(measured.Width + CellPadding, 90, 200);
+        return _dateFloor;
+    }
+
+    /// <summary>
+    /// What a cell spends around its text. GridViewRowPresenter insets each cell's content inside
+    /// the column width, so a column exactly as wide as its text still clips it.
+    /// </summary>
+    private const double CellPadding = 18;
 
     /// <summary>
     /// What a row spends on itself before any column sees a unit of it: the ListViewItem style's
@@ -2444,11 +2579,12 @@ public partial class MainWindow
             return;
         }
 
+        double[] columnFloors = Floors();
         double floors = 0;
         double shares = 0;
         for (int i = 0; i < count; i++)
         {
-            floors += ColumnFloors[i];
+            floors += columnFloors[i];
             shares += ColumnShares[i];
         }
 
@@ -2465,11 +2601,14 @@ public partial class MainWindow
         {
             if (available <= floors || shares <= 0)
             {
-                // Narrower than the columns can honestly go. They overflow, and the window's own
-                // minimum size is what stops this from being reachable in practice.
+                // Narrower than the columns can honestly go, which a locale with a wide date format
+                // reaches at the default window size. Squeeze them all rather than let them
+                // overflow: a slightly tight date is worth more than a column pushed off an edge
+                // there may be nothing to scroll it back from.
+                double squeeze = floors > 0 ? available / floors : 1;
                 for (int i = 0; i < count; i++)
                 {
-                    view.Columns[i].Width = ColumnFloors[i];
+                    view.Columns[i].Width = columnFloors[i] * squeeze;
                 }
                 return;
             }
@@ -2477,7 +2616,7 @@ public partial class MainWindow
             double spare = available - floors;
             for (int i = 0; i < count; i++)
             {
-                view.Columns[i].Width = ColumnFloors[i] + spare * ColumnShares[i] / shares;
+                view.Columns[i].Width = columnFloors[i] + spare * ColumnShares[i] / shares;
             }
         }
         finally
@@ -2487,22 +2626,49 @@ public partial class MainWindow
     }
 
     /// <summary>
+    /// Starts noticing when a column's width is changed by anything other than this class.
+    ///
+    /// Watching the property rather than the gesture, deliberately. The obvious route — the
+    /// gripper's DragCompleted, which bubbles to the header — misses two ways: GridViewColumnHeader
+    /// marks that event handled on its way past, so a style EventSetter never sees it, and
+    /// double-clicking the gripper to size a column to its contents is not a drag at all. Every one
+    /// of them ends up writing Width, so that is what is watched, and the guard in
+    /// <see cref="TakeColumnsOverManually"/> tells the user's changes from ours.
+    /// </summary>
+    private void WatchColumnWidths()
+    {
+        System.ComponentModel.DependencyPropertyDescriptor descriptor =
+            System.ComponentModel.DependencyPropertyDescriptor.FromProperty(
+                System.Windows.Controls.GridViewColumn.WidthProperty,
+                typeof(System.Windows.Controls.GridViewColumn));
+        if (descriptor == null)
+        {
+            return;
+        }
+
+        foreach (System.Windows.Controls.GridViewColumn column in
+                 ((System.Windows.Controls.GridView)ResultsList.View).Columns)
+        {
+            descriptor.AddValueChanged(column, (_, __) => TakeColumnsOverManually());
+        }
+    }
+
+    /// <summary>
     /// Hands the columns to the user for good, at the widths they are at right now.
     ///
-    /// Called the moment a column edge is dragged. Auto-fit and a dragged width cannot both be
-    /// true — the next resize would overwrite the drag — and of the two, the one the user just
-    /// did by hand wins.
+    /// Auto-fit and a width set by hand cannot both be true — the next resize of the window would
+    /// overwrite the one the user just chose — and of the two, the one they did themselves wins.
+    /// The widths are written out by <see cref="SaveSettings"/> either way, so switching over
+    /// carries on from what is on screen rather than from some older layout.
     /// </summary>
     private void TakeColumnsOverManually()
     {
         if (_fittingColumns)
         {
-            return;      // our own width assignment, not a drag
+            return;      // our own width assignment, not the user's
         }
         _settings.AutoFitColumns = false;
     }
-
-    private void OnColumnResized(object sender, RoutedEventArgs e) => TakeColumnsOverManually();
 
     private System.Windows.Controls.GridViewColumn ColumnNamed(string key)
     {

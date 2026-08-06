@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -493,6 +493,83 @@ public sealed class SearchQuery
     public bool IncludeFiles { get; set; } = true;
     public bool IncludeDirectories { get; set; } = true;
 
+    /// <summary>
+    /// Whether a dot, an underscore or a hyphen typed in the file name counts as a gap between
+    /// words rather than as a character that has to be there.
+    ///
+    /// The engine splits the name query on spaces and tabs and requires every word as a substring
+    /// — see <c>GClass168.smethod_1</c>, which is the 1.5.1 app's own splitter. That already makes
+    /// "family guy" find <c>Family.Guy.S01E01.mkv</c>, because both words are in it. What it does
+    /// not do is the reverse: type the name the way the file actually spells it, "Family.Guy", and
+    /// it becomes one literal substring that the spaced-out copy of the same show does not contain.
+    ///
+    /// Which is backwards. Whether a release used dots, underscores or spaces is an accident of
+    /// whoever packed it, and nobody searching for it is trying to express a preference about it.
+    /// </summary>
+    public bool FlexibleSeparators { get; set; } = true;
+
+    /// <summary>The separators that are treated as a gap. Space and tab are the engine's own.</summary>
+    private static readonly char[] WordSeparators = { '.', '_', '-' };
+
+    /// <summary>
+    /// The file name as the engine should see it: with the separators above turned into the spaces
+    /// it already understands, so no engine code has to change and the fast substring matchers are
+    /// kept — a regular expression per file over a whole-disk result set is not the same thing at
+    /// all.
+    ///
+    /// Rewritten one whitespace-delimited word at a time, and left alone unless splitting it is
+    /// unambiguously what was meant. Three guards, each earning its place:
+    ///
+    /// <list type="bullet">
+    /// <item>A word holding <c>*</c> or <c>?</c> is a wildcard pattern; the engine has its own
+    /// meaning for it and this must not get in the way.</item>
+    /// <item>A word that begins or ends with a separator is using it as a character, not as a gap:
+    /// <c>.dll</c> means the extension, and splitting it to <c>dll</c> would quietly widen that to
+    /// every file with "dll" anywhere in its name.</item>
+    /// <item>A word that would break into a one-character piece is left whole. <c>v1.5</c> would
+    /// otherwise become "v1" and "5", and a bare "5" matches most of a disk.</item>
+    /// </list>
+    /// </summary>
+    public string EffectiveFilename()
+    {
+        string text = Filename ?? string.Empty;
+        if (!FlexibleSeparators || FilenameRegex || text.Length == 0)
+        {
+            return text;
+        }
+
+        string[] words = text.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < words.Length; i++)
+        {
+            words[i] = Loosen(words[i]);
+        }
+        return string.Join(" ", words);
+    }
+
+    private static string Loosen(string word)
+    {
+        if (word.IndexOf('*') >= 0 || word.IndexOf('?') >= 0
+            || Array.IndexOf(WordSeparators, word[0]) >= 0
+            || Array.IndexOf(WordSeparators, word[word.Length - 1]) >= 0)
+        {
+            return word;
+        }
+
+        string[] pieces = word.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
+        if (pieces.Length < 2)
+        {
+            return word;
+        }
+        foreach (string piece in pieces)
+        {
+            if (piece.Length < 2)
+            {
+                return word;
+            }
+        }
+        return string.Join(" ", pieces);
+    }
+
     public bool IsEmpty =>
         string.IsNullOrWhiteSpace(Filename)
         && string.IsNullOrWhiteSpace(Directory)
@@ -505,7 +582,7 @@ public sealed class SearchQuery
         // NullReferenceException is swallowed inside the search worker - it surfaces only as
         // "0 results", which is a genuinely nasty thing to debug.
         GClass282 q = new GClass282();
-        q.method_1(Filename ?? string.Empty);
+        q.method_1(EffectiveFilename());
         q.method_3(FilenameIgnoreCase);
         q.method_5(FilenameRegex);
         q.method_7(Directory ?? string.Empty);

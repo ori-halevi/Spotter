@@ -28,7 +28,7 @@ internal static class StringsEn
             ["Field.Name.Tip.Words"] = "Several words must all appear, in any order:  log 2024",
             ["Field.Name.Tip.Wildcards"] = "Wildcards * and ? work per word:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "Down opens recent searches. Enter searches now instead of waiting for the pause.",
-            ["Field.Name.OptionsTip"] = "Options for the file name: match case, regular expression.",
+            ["Field.Name.OptionsTip"] = "Options for the file name: match case, regular expression, how separators are treated.",
 
             ["Field.Folder.Placeholder"] = "In folder",
             ["Field.Folder.Tip.Title"] = "In folder",
@@ -70,6 +70,7 @@ internal static class StringsEn
             // ---- active-options summary ---------------------------------------------------------
             ["Active.Name.Case"] = "name: match case",
             ["Active.Name.Regex"] = "name: regex",
+            ["Active.Name.ExactSeparators"] = "name: exact separators",
             ["Active.Folder.Case"] = "folder: match case",
             ["Active.Folder.Regex"] = "folder: regex",
             ["Active.NoSubfolders"] = "no subfolders",
@@ -104,6 +105,8 @@ internal static class StringsEn
             ["Menu.Regex"] = "Regular expression",
             ["Menu.Regex.Name.Tip"] = "A .NET regular expression over the file name. Words and * ? wildcards stop applying.",
             ["Menu.Regex.Folder.Tip"] = "A .NET regular expression over the folder path. Backslashes need escaping — the Browse button does that for you.",
+            ["Menu.FlexibleSeparators"] = "Dots and dashes count as spaces",
+            ["Menu.FlexibleSeparators.Tip"] = "On: 'Family.Guy' also finds 'Family Guy' and 'Family_Guy', because a dot, an underscore or a hyphen between two words is treated as a gap. Off: they have to be exactly the character you typed.",
             ["Menu.Subfolders"] = "Include subfolders",
             ["Menu.Subfolders.Tip"] = "On: match any folder above the file. Off: the file's own folder must match.",
 
