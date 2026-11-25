@@ -29,6 +29,7 @@ internal static class StringsEn
             ["Field.Name.Tip.Wildcards"] = "Wildcards * and ? work per word:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "Down opens recent searches. Enter searches now instead of waiting for the pause.",
             ["Field.Name.OptionsTip"] = "Options for the file name: match case, regular expression, how separators are treated.",
+            ["Field.Name.RefreshTip"] = "Run the search again, the same as F5. Use it when a file is about to be created: nothing re-runs by itself while you wait.",
 
             ["Field.Folder.Placeholder"] = "In folder",
             ["Field.Folder.Tip.Title"] = "In folder",

@@ -326,6 +326,25 @@
                            Icon="{ui:SymbolIcon Options24}" Tag="NameOptionsMenu"
                            Click="OnFieldOptions"
                            ToolTip="{loc:Loc Field.Name.OptionsTip}" />
+                <!-- Re-runs the query that is already typed, which is the only way to notice a
+                     file that has appeared since the last run: the same OnSearchAgain that F5 and
+                     the context menu call. It is beside the box because waiting for a file to be
+                     written means pressing it over and over, and the gesture people reached for
+                     instead was typing a letter and deleting it again.
+
+                     Docked Left — the start of the field, so the opposite end from the options
+                     button, and under the Hebrew FlowDirection that start is the right-hand side.
+                     Focusable="False" keeps the caret and the selection in the box across a
+                     click, so typing can carry on straight after a refresh.
+
+                     Disabled while all three fields are blank, which is the state in which a
+                     search returns nothing by definition (SearchQuery.IsEmpty), so there would be
+                     nothing to re-run. Kept in step by UpdateRefreshButton. -->
+                <ui:Button x:Name="RefreshButton" DockPanel.Dock="Left" Margin="0,0,4,0"
+                           Padding="8,0" Height="34" IsEnabled="False"
+                           Icon="{ui:SymbolIcon ArrowSync24}" Focusable="False"
+                           Click="OnSearchAgain"
+                           ToolTip="{loc:Loc Field.Name.RefreshTip}" />
             <ui:TextBox x:Name="FilenameBox"
                         PlaceholderText="{loc:Loc Field.Name.Placeholder}"
                         Icon="{ui:SymbolIcon Search24}"

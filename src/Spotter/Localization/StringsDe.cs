@@ -26,6 +26,7 @@ internal static class StringsDe
             ["Field.Name.Tip.Wildcards"] = "Die Platzhalter * und ? gelten je Wort:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "Pfeil nach unten öffnet die letzten Suchen. Enter sucht sofort, ohne die Tipppause abzuwarten.",
             ["Field.Name.OptionsTip"] = "Optionen für den Dateinamen: Groß-/Kleinschreibung, regulärer Ausdruck, Umgang mit Trennzeichen.",
+            ["Field.Name.RefreshTip"] = "Die Suche erneut ausführen, genau wie F5. Nützlich, wenn eine Datei gleich angelegt wird: von selbst läuft die Suche nicht erneut.",
 
             ["Field.Folder.Placeholder"] = "In Ordner",
             ["Field.Folder.Tip.Title"] = "In Ordner",

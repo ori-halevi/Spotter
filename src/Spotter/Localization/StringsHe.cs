@@ -51,6 +51,7 @@ internal static class StringsHe
                                            + L + "*.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "חץ למטה פותח את החיפושים האחרונים. Enter מחפש מיד, בלי להמתין להפסקת ההקלדה.",
             ["Field.Name.OptionsTip"] = "אפשרויות לשם הקובץ: התאמת רישיות, ביטוי רגולרי, איך מתייחסים למפרידים.",
+            ["Field.Name.RefreshTip"] = "הרצה מחדש של החיפוש, בדיוק כמו F5. שימושי כשקובץ עומד להיווצר: שום דבר לא מתרענן מעצמו בזמן ההמתנה.",
 
             ["Field.Folder.Placeholder"] = "בתיקייה",
             ["Field.Folder.Tip.Title"] = "בתיקייה",

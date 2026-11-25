@@ -26,6 +26,7 @@ internal static class StringsEs
             ["Field.Name.Tip.Wildcards"] = "Los comodines * y ? se aplican a cada palabra:  *.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "La flecha abajo abre las búsquedas recientes. Entrar busca ya, sin esperar la pausa de escritura.",
             ["Field.Name.OptionsTip"] = "Opciones del nombre de archivo: mayúsculas y minúsculas, expresión regular, cómo se tratan los separadores.",
+            ["Field.Name.RefreshTip"] = "Ejecutar la búsqueda de nuevo, igual que F5. Útil cuando un archivo está a punto de crearse: nada se repite por sí solo mientras esperas.",
 
             ["Field.Folder.Placeholder"] = "En la carpeta",
             ["Field.Folder.Tip.Title"] = "En la carpeta",

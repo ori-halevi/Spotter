@@ -467,6 +467,7 @@ public partial class MainWindow
         Topmost = false;
 
         FilenameBox.Focus();
+        UpdateRefreshButton();      // a query restored from the last session counts as one to re-run
 
         if (TryStartDemoMode())
         {
@@ -885,6 +886,7 @@ public partial class MainWindow
         {
             return;
         }
+        UpdateRefreshButton();
         if (ReferenceEquals(sender, DirectoryBox) && !_suppressFolderSuggest)
         {
             UpdateFolderSuggestions();
@@ -2004,6 +2006,14 @@ public partial class MainWindow
         ResultsList.SelectedItems.Clear();
         UpdateSelectionText(null);
     }
+
+    /// <summary>
+    /// Greys out the refresh button exactly when there is no query to re-run. All three fields
+    /// blank is <see cref="SearchQuery.IsEmpty"/>, which the engine answers by clearing the grid
+    /// rather than searching, so a refresh in that state could only ever do nothing.
+    /// </summary>
+    private void UpdateRefreshButton() =>
+        RefreshButton.IsEnabled = !CurrentQuery().IsEmpty;
 
     private void OnSearchAgain(object sender, RoutedEventArgs e)
     {

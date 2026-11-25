@@ -380,7 +380,9 @@ paths, Ctrl+S exports, Del / Shift+Del delete, Esc returns to the search box. In
 Enter searches immediately instead of waiting out the debounce, and Esc clears that field —
 pressing it again, now that the field is empty, resets all three. Down opens the history in the
 name field and the folder completions in the folder field. F5 re-runs the search from anywhere in
-the window.
+the window, and the refresh button at the start of the name field does the same with the mouse —
+it is there because the one thing a live index cannot do is tell you about a file that has not been
+written yet, so waiting for one means re-running the same query repeatedly.
 
 Every gesture printed in a menu is a real binding. Two of them were not when the menus were first
 written, which is worth stating because a menu is where users go to *learn* the shortcuts: an

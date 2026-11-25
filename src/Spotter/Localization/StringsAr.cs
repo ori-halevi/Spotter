@@ -43,6 +43,7 @@ internal static class StringsAr
                                            + L + "*.dll    report?.txt",
             ["Field.Name.Tip.Keys"] = "السهم لأسفل يفتح عمليات البحث الأخيرة. Enter يبحث فورًا دون انتظار توقف الكتابة.",
             ["Field.Name.OptionsTip"] = "خيارات اسم الملف: مطابقة حالة الأحرف، تعبير عادي، طريقة معاملة الفواصل.",
+            ["Field.Name.RefreshTip"] = "تنفيذ البحث من جديد، تمامًا مثل F5. مفيد عندما يكون الملف على وشك الإنشاء: لا شيء يتكرر من تلقاء نفسه أثناء الانتظار.",
 
             ["Field.Folder.Placeholder"] = "في المجلد",
             ["Field.Folder.Tip.Title"] = "في المجلد",
