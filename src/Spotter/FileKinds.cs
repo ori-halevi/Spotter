@@ -66,6 +66,19 @@ public static class FileKinds
     /// <summary>Every bucket on, which is what <see cref="FileKindFilter.Everything"/> means.</summary>
     public static readonly int AllMask = (1 << FileKinds.All.Length) - 1;
 
+    /// <summary>
+    /// Keys produced by a generated run rather than typed out. They match like any other, but
+    /// they are left out of the hover lists: a hundred split-RAR volume numbers is ninety-nine
+    /// more than anyone needs to see, and the Archive tooltip exists to answer "is the extension
+    /// I want in here?" — a question a wall of r00, r01, r02 actively prevents.
+    /// </summary>
+    private static readonly HashSet<string> Generated =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>What to show in place of a generated run, per bucket.</summary>
+    private static readonly Dictionary<FileKind, string> GeneratedLabel =
+        new Dictionary<FileKind, string> { [FileKind.Archive] = "r00-r99" };
+
     private static readonly Dictionary<string, int> Map = Build();
 
     private static Dictionary<string, int> Build()
@@ -134,8 +147,10 @@ public static class FileKinds
         // part of a split archive a user is least likely to go looking for on its own.
         for (int part = 0; part < 100; part++)
         {
-            map["r" + part.ToString("D2", System.Globalization.CultureInfo.InvariantCulture)] =
-                Bit(FileKind.Archive);
+            string key = "r" + part.ToString("D2", System.Globalization.CultureInfo.InvariantCulture);
+            map.TryGetValue(key, out int existing);
+            map[key] = existing | Bit(FileKind.Archive);
+            Generated.Add(key);
         }
 
         return map;
@@ -178,7 +193,10 @@ public static class FileKinds
                     {
                         lists[kind] = list = new List<string>();
                     }
-                    list.Add(entry.Key);
+                    if (!Generated.Contains(entry.Key))
+                    {
+                        list.Add(entry.Key);
+                    }
                 }
             }
         }
@@ -186,6 +204,10 @@ public static class FileKinds
         Dictionary<FileKind, string[]> result = new Dictionary<FileKind, string[]>();
         foreach (KeyValuePair<FileKind, List<string>> entry in lists)
         {
+            if (GeneratedLabel.TryGetValue(entry.Key, out string label))
+            {
+                entry.Value.Add(label);
+            }
             entry.Value.Sort(StringComparer.OrdinalIgnoreCase);
             result[entry.Key] = entry.Value.ToArray();
         }
@@ -233,7 +255,26 @@ public static class FileKinds
             return 0;
         }
 
-        return Map.TryGetValue(name.Substring(dot + 1), out int mask) ? mask : 0;
+        if (Map.TryGetValue(name.Substring(dot + 1), out int mask))
+        {
+            return mask;
+        }
+
+        // A dotfile with something appended — ".env.local", ".env.production", ".babelrc.js".
+        // The last segment names nothing, but the first one does, and it is the first one that
+        // says what the file is. Without this, the leading-dot fix above reached ".env" and left
+        // behind the spelling people actually hunt for: ".env.local" is the copy that is
+        // gitignored, and therefore the one that is never where they expect it.
+        if (name[0] == '.')
+        {
+            int second = name.IndexOf('.', 1);
+            if (second > 1 && second - 1 <= 16
+                && Map.TryGetValue(name.Substring(1, second - 1), out int leading))
+            {
+                return leading;
+            }
+        }
+        return 0;
     }
 
     /// <summary>
@@ -285,12 +326,25 @@ public static class FileKinds
         return set;
     }
 
+    /// <summary>
+    /// Characters that cannot appear in a Windows file name, so an entry holding one can never
+    /// match anything. Taken from the framework rather than listed by hand: the hand-written
+    /// list missed the quote, which is how an extension is written nearly everywhere it is
+    /// documented — paste "*.mkv" with its quotes and the entry was counted and dead.
+    /// </summary>
+    private static readonly char[] Illegal = System.IO.Path.GetInvalidFileNameChars();
+
     private static bool IsUsableExtension(string extension)
     {
         foreach (char c in extension)
         {
+            // Format characters — the bidi marks and zero-width joiners that come along with a
+            // copy out of a right-to-left document or a web page — are neither whitespace nor
+            // control, so they survive every other test and leave an entry that looks exactly
+            // like a working one.
             if (char.IsWhiteSpace(c) || char.IsControl(c)
-                || c == '*' || c == '?' || c == ':' || c == '/' || c == '\\')
+                || char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.Format
+                || c == '*' || c == '?' || Array.IndexOf(Illegal, c) >= 0)
             {
                 return false;
             }

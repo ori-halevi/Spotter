@@ -192,13 +192,98 @@ public sealed class UiSettings
     /// an entry the new term merely extends is dropped: searching for "notepad" leaves "notepad",
     /// not "note", "notep", "notepa", "notepad".
     /// </summary>
+    /// <summary>
+    /// Drops the characters an XML document cannot hold, so that one of them cannot make every
+    /// later save throw.
+    ///
+    /// It belongs here, on the value, rather than on the control that produced it. The first
+    /// version of this guarded the file-type extension box alone — and the search box, which is
+    /// the one people paste into, went on storing whatever came off the clipboard. A soft line
+    /// break out of Word (U+000B) typed or pasted into a search then sat in the history for the
+    /// rest of the session, XmlSerializer threw on every Save, Save caught and logged, and the
+    /// window geometry, the column widths, the language and the history were all abandoned
+    /// without a word.
+    ///
+    /// A valid surrogate pair is dropped too, since IsXmlChar is false for each half on its own.
+    /// Nothing that belongs in a file name or a search term is affected.
+    /// </summary>
+    public static string XmlSafe(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        System.Text.StringBuilder clean = null;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (System.Xml.XmlConvert.IsXmlChar(text[i]))
+            {
+                clean?.Append(text[i]);
+            }
+            else
+            {
+                clean ??= new System.Text.StringBuilder(text.Length).Append(text, 0, i);
+            }
+        }
+        return clean?.ToString() ?? text;
+    }
+
+    /// <summary>
+    /// Takes the values that belong to the application rather than to one window from a freshly
+    /// read copy of the file, leaving this window's own geometry and columns alone.
+    ///
+    /// Used when an extra window takes over the instance role. Its copy of the settings was read
+    /// when it launched, and the window that has just closed may have spent an hour adding to the
+    /// history and changing options since — all of which the adopting window would otherwise
+    /// write straight over, because Save replaces the whole document. The history is unioned
+    /// rather than replaced, because it is the one field both windows add to.
+    /// </summary>
+    public void AdoptSharedFrom(UiSettings file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+
+        Theme = file.Theme;
+        Language = file.Language;
+        Scale = file.Scale;
+        ScaleFollowsScreen = file.ScaleFollowsScreen;
+        RestoreHotkey = file.RestoreHotkey;
+        ShowTrayIcon = file.ShowTrayIcon;
+        MinimizeToTray = file.MinimizeToTray;
+        CloseToTray = file.CloseToTray;
+        SearchAsYouType = file.SearchAsYouType;
+        RememberPlacement = file.RememberPlacement;
+        RememberFileFolderFilters = file.RememberFileFolderFilters;
+        AutoFitColumns = file.AutoFitColumns;
+
+        // Ours first: the terms this window searched are the more recent ones.
+        foreach (string term in file.RecentSearches)
+        {
+            if (!RecentSearches.Exists(t => string.Equals(t, term, StringComparison.OrdinalIgnoreCase)))
+            {
+                RecentSearches.Add(term);
+            }
+        }
+        if (RecentSearches.Count > HistoryLimit)
+        {
+            RecentSearches.RemoveRange(HistoryLimit, RecentSearches.Count - HistoryLimit);
+        }
+    }
+
     public void RememberSearch(string term)
     {
         if (string.IsNullOrWhiteSpace(term))
         {
             return;
         }
-        term = term.Trim();
+        term = XmlSafe(term.Trim());
+        if (term.Length == 0)
+        {
+            return;
+        }
 
         RecentSearches.RemoveAll(t => string.Equals(t, term, StringComparison.OrdinalIgnoreCase));
         if (RecentSearches.Count > 0

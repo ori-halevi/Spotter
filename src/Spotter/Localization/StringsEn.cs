@@ -145,7 +145,7 @@ internal static class StringsEn
             ["Menu.Filter.FilesOnly"] = "Files only",
             ["Menu.Filter.FoldersOnly"] = "Folders only",
             ["Menu.Filter.Reset"] = "Reset all search options",
-            ["Menu.Filter.Reset.Tip"] = "Back to files and folders, no case matching, no regex, subfolders included. File types back to all.",
+            ["Menu.Filter.Reset.Tip"] = "Back to files and folders, no case matching, no regex, subfolders included. All file types.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "Open",
@@ -189,7 +189,7 @@ internal static class StringsEn
             ["Status.Ready"] = "Ready — {0} ({1})",
             ["Status.IndexFailed"] = "Indexing failed: {0}",
             ["Status.HotkeyTaken"] = "Hotkey {0} is already in use by another app.",
-            ["Status.NotSaved"] = "Not saved — the first Spotter window owns the settings file. This one takes over if that window closes.",
+            ["Status.NotSaved"] = "Not saved — the first window owns the settings.",
             ["Status.Demo"] = "DEMO MODE — {0} (no engine, Path is blank)",
             ["Status.Found"] = "{0} in {1} ms",
             ["Status.Searching.Suffix"] = " …",
@@ -287,7 +287,7 @@ internal static class StringsEn
 
             ["Options.Searching"] = "Searching",
             ["Options.SearchAsYouType"] = "Search as you type",
-            ["Options.RememberFilters"] = "Remember the Files and Folders switches and the file types",
+            ["Options.RememberFilters"] = "Remember Files, Folders and file types",
             ["Options.RememberFilters.Hint"] = "Off: both start every run switched on. A window that opens with one of them off finds nothing of that kind and looks as though the file is simply not there. The file type list follows the same setting.",
             ["Options.SearchAsYouType.On"] = "A new search starts on each letter typed or setting changed.",
             ["Options.SearchAsYouType.Off"] = "Nothing is searched until you press Search or Enter. Useful on a busy machine, or when a query matches most of the disk.",

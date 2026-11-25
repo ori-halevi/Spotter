@@ -91,6 +91,7 @@ public partial class MainWindow
             // arrives if the app is closed while the drives are still being read.
             try { _typingDebounce.Stop(); } catch { }
             try { StopIndexProgress(); } catch { }
+            try { _ownershipWatch?.Stop(); } catch { }
             try { _showWatch?.Unregister(null); } catch { }
             try { _hotkey?.Dispose(); } catch { }
             try { _tray?.Dispose(); } catch { }
@@ -195,36 +196,84 @@ public partial class MainWindow
     /// </summary>
     private void WatchForOwnership()
     {
-        _ownershipWatch = new DispatcherTimer(DispatcherPriority.Background)
+        // Once only. ApplySettingsChange rebuilds the tray and hotkey through
+        // SetUpTrayAndHotkey, which lands back here on every Options save, and without this
+        // guard each one started another timer over the top of the last — the old one still in
+        // the dispatcher's timer list, still ticking, and no longer reachable to stop.
+        if (_ownershipWatch != null)
+        {
+            return;
+        }
+
+        DispatcherTimer watch = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(4),
         };
-        _ownershipWatch.Tick += (_, __) =>
+        _ownershipWatch = watch;
+
+        watch.Tick += (_, __) =>
         {
+            // The timer the tick belongs to, not whatever the field points at now — see above.
+            if (App.AdoptionImpossible || !IsLoaded)
+            {
+                watch.Stop();
+                return;
+            }
             if (!App.TryAdoptOwnership())
             {
                 return;
             }
 
-            _ownershipWatch.Stop();
+            watch.Stop();
             _ownershipWatch = null;
-
-            // Everything the role carries, in the order a first instance would have taken it.
-            RegisterRestoreHotkey();
-            ListenForShowRequests();
-
-            // Back to the plain name: the title said "extra instance" to mark the window whose
-            // settings are not written, and that is no longer true of it.
-            Title = WindowTitleBar.Title = "Spotter";
-
-            // From here the settings file is this window's to write. Its copy was read at launch
-            // and the instance that has just gone may have written over it since, so the first
-            // save will carry this window's state rather than that one's — which is the right
-            // way round: this is the window the user still has in front of them.
-            SaveSettings();
-            _settings.Save();
+            TakeOverTheRole();
         };
-        _ownershipWatch.Start();
+        watch.Start();
+    }
+
+    /// <summary>
+    /// Everything the instance role carries, taken up one piece at a time.
+    ///
+    /// Separately guarded, for the reason the Loaded handlers above are: having cleared
+    /// SecondaryInstance and taken the mutex, a throw part-way through would leave this process
+    /// holding the slot with nobody listening on the show signal — which is the state the
+    /// handover exists to prevent, reached by a different road. The listener goes first because
+    /// it is the floor: without it a re-launch cannot reach this window at all, while the hotkey
+    /// is only a convenience.
+    /// </summary>
+    private void TakeOverTheRole()
+    {
+        try { ListenForShowRequests(); } catch (Exception ex) { Log.Write("takeover, show signal: " + ex.Message); }
+        try { RegisterRestoreHotkey(); } catch (Exception ex) { Log.Write("takeover, hotkey: " + ex.Message); }
+
+        // Back to the plain name: the title said "extra instance" to mark the window whose
+        // settings are not written, and that is no longer true of it.
+        try { Title = WindowTitleBar.Title = "Spotter"; } catch { }
+
+        // Take the file's view of everything that is not this window's own.
+        //
+        // This window's copy was read when it launched, and the instance that has just gone may
+        // have spent an hour since then adding searches and changing options. Writing our copy
+        // over the file — which is what the first version of this did, immediately — threw all
+        // of that away four seconds after the user closed that window, silently. Save replaces
+        // the whole document, so there is no version of "just write ours" that does not.
+        //
+        // Nothing is written here. The close-time save will carry it, and until then the file
+        // holds the departing window's state, which is the safer thing to find after a crash.
+        try
+        {
+            _settings.AdoptSharedFrom(UiSettings.Load());
+            ApplySettingsChange();
+            RefreshHistoryList();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("takeover, settings: " + ex.Message);
+        }
+
+        // The status line may still be carrying "not saved — the first window owns the file",
+        // which has just stopped being true.
+        try { RefreshStatusLine(); } catch { }
     }
 
     /// <summary>
@@ -1286,6 +1335,7 @@ public partial class MainWindow
             }
             _settings.Save();
             RefreshHistoryList();
+            WarnIfNotWritten();     // the other half of Clear history, and just as silent
             if (_settings.RecentSearches.Count == 0)
             {
                 HistoryPopup.IsOpen = false;
@@ -2527,14 +2577,18 @@ public partial class MainWindow
     private void OnFileTypes(object sender, RoutedEventArgs e)
     {
         // A StaysOpen="False" popup closes itself on the mouse-down that precedes this click, so
-        // IsOpen always reads false here and a plain toggle would reopen what the user just
-        // dismissed. Assigning true unconditionally fixed that and cost the other half: the
-        // button could never close its own panel.
+        // IsOpen always reads false by the time Click runs. The question is whether the panel was
+        // open when the user pressed the button, and OnFileTypesButtonDown — which runs before
+        // the popup closes — is the only place that can answer it.
         //
-        // So the close is remembered instead. A click arriving within a moment of the panel
-        // closing is that same click, and means "shut it".
-        if ((DateTime.UtcNow - _typesClosedUtc).TotalMilliseconds < 250)
+        // This replaces a 250 ms timer. The interval between the mouse-down that closes a popup
+        // and the mouse-up that raises Click is how long the user holds the button down, so the
+        // timer was measuring the user's click speed: hold it a quarter second, which a trackpad
+        // or an unhurried hand does easily, and the panel shut and reopened. It also swallowed a
+        // keyboard Space that followed Escape, and read a backwards clock change as "just now".
+        if (_typesWasOpenOnPress)
         {
+            _typesWasOpenOnPress = false;
             return;
         }
         FileTypesPopup.IsOpen = true;
@@ -2561,13 +2615,19 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>When the panel last closed, which is how the chevron knows to stay shut.</summary>
-    private DateTime _typesClosedUtc = DateTime.MinValue;
+    /// <summary>
+    /// Whether the panel was open at the moment the chevron was pressed — the one fact Click
+    /// cannot recover for itself, because the popup has already closed by then.
+    /// </summary>
+    private bool _typesWasOpenOnPress;
+
+    private void OnFileTypesButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _typesWasOpenOnPress = FileTypesPopup.IsOpen;
+    }
 
     private void OnFileTypesClosed(object sender, EventArgs e)
     {
-        _typesClosedUtc = DateTime.UtcNow;
-
         // Nothing here is a commit point: the box is read straight out of the control by
         // CurrentTypeFilter and only reaches the settings file in SaveSettings. This redraw is
         // belt and braces for a close that did not come through a handler of ours.

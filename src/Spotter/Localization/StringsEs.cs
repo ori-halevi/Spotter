@@ -139,7 +139,7 @@ internal static class StringsEs
             ["Menu.Filter.FilesOnly"] = "Solo archivos",
             ["Menu.Filter.FoldersOnly"] = "Solo carpetas",
             ["Menu.Filter.Reset"] = "Restablecer todas las opciones de búsqueda",
-            ["Menu.Filter.Reset.Tip"] = "Vuelve a archivos y carpetas, sin distinguir mayúsculas, sin expresión regular y con subcarpetas. Tipos de archivo: todos de nuevo.",
+            ["Menu.Filter.Reset.Tip"] = "Vuelve a archivos y carpetas, sin distinguir mayúsculas, sin expresión regular y con subcarpetas. Todos los tipos.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "Abrir",
@@ -181,7 +181,7 @@ internal static class StringsEs
             ["Status.Ready"] = "Listo — {0} ({1})",
             ["Status.IndexFailed"] = "Error al indizar: {0}",
             ["Status.HotkeyTaken"] = "La combinación {0} ya la está usando otra aplicación.",
-            ["Status.NotSaved"] = "No guardado: el archivo de ajustes pertenece a la primera ventana de Spotter. Esta lo asumirá si aquella se cierra.",
+            ["Status.NotSaved"] = "No guardado: los ajustes son de la primera ventana.",
             ["Status.Demo"] = "MODO DEMO — {0} (sin motor, la ruta queda vacía)",
             ["Status.Found"] = "{0} en {1} ms",
             ["Status.Searching.Suffix"] = " …",
@@ -277,7 +277,7 @@ internal static class StringsEs
 
             ["Options.Searching"] = "Búsqueda",
             ["Options.SearchAsYouType"] = "Buscar mientras escribe",
-            ["Options.RememberFilters"] = "Recordar los interruptores Archivos y Carpetas y los tipos de archivo",
+            ["Options.RememberFilters"] = "Recordar archivos, carpetas y tipos",
             ["Options.RememberFilters.Hint"] = "Desactivado: los dos empiezan encendidos en cada ejecución. Una ventana que se abre con uno apagado no encuentra nada de ese tipo, y parece que el archivo simplemente no está. La lista de tipos de archivo sigue el mismo ajuste.",
             ["Options.SearchAsYouType.On"] = "Cada letra escrita o ajuste cambiado inicia una búsqueda nueva.",
             ["Options.SearchAsYouType.Off"] = "No se busca nada hasta que pulse Buscar o Entrar. Útil en un equipo cargado, o cuando una consulta coincide con casi todo el disco.",

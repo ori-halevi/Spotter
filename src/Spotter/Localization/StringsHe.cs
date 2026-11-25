@@ -170,7 +170,7 @@ internal static class StringsHe
             ["Menu.Filter.FilesOnly"] = "קבצים בלבד",
             ["Menu.Filter.FoldersOnly"] = "תיקיות בלבד",
             ["Menu.Filter.Reset"] = "איפוס כל אפשרויות החיפוש",
-            ["Menu.Filter.Reset.Tip"] = "חזרה לקבצים ותיקיות, בלי התאמת רישיות, בלי ביטוי רגולרי, כולל תיקיות משנה. וסוגי הקבצים חוזרים לכולם.",
+            ["Menu.Filter.Reset.Tip"] = "חזרה לקבצים ותיקיות, בלי התאמת רישיות, בלי ביטוי רגולרי, כולל תיקיות משנה. וכל סוגי הקבצים.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "פתיחה",
@@ -212,7 +212,7 @@ internal static class StringsHe
             ["Status.Ready"] = "מוכן — {0} ({1})",
             ["Status.IndexFailed"] = "האינדוקס נכשל: {0}",
             ["Status.HotkeyTaken"] = "מקש הקיצור {0} כבר תפוס על ידי יישום אחר.",
-            ["Status.NotSaved"] = "לא נשמר — החלון הראשון של Spotter הוא הבעלים של קובץ ההגדרות. החלון הזה יקבל את התפקיד אם הראשון ייסגר.",
+            ["Status.NotSaved"] = "לא נשמר — ההגדרות שייכות לחלון הראשון.",
             ["Status.Demo"] = "מצב הדגמה — {0} (בלי מנוע, עמודת הנתיב ריקה)",
             ["Status.Found"] = "{0} תוך {1} מ״ש",
             ["Status.Searching.Suffix"] = " …",
@@ -309,7 +309,7 @@ internal static class StringsHe
 
             ["Options.Searching"] = "חיפוש",
             ["Options.SearchAsYouType"] = "חיפוש תוך כדי הקלדה",
-            ["Options.RememberFilters"] = "לזכור את המתגים \"קבצים\" ו\"תיקיות\" ואת סוגי הקבצים",
+            ["Options.RememberFilters"] = "לזכור קבצים, תיקיות וסוגי קבצים",
             ["Options.RememberFilters.Hint"] = "כשכבוי: שניהם נדלקים מחדש בכל הפעלה. חלון שנפתח כשאחד מהם כבוי לא מוצא דבר מאותו סוג, ונראה כאילו הקובץ פשוט לא קיים. רשימת סוגי הקבצים נוהגת לפי אותה הגדרה.",
             ["Options.SearchAsYouType.On"] = "חיפוש חדש מתחיל בכל אות שמוקלדת או בכל שינוי הגדרה.",
             ["Options.SearchAsYouType.Off"] = "שום דבר לא נחפש עד ללחיצה על חיפוש או על Enter. שימושי במחשב עמוס, או כששאילתה מתאימה לרוב הדיסק.",

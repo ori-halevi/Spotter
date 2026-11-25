@@ -374,12 +374,29 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <!-- The border is always 1px and normally transparent, so the focus
+                             ring appears without reflowing the glyph by a pixel. -->
                         <Border x:Name="Fill" Background="{TemplateBinding Background}"
-                                BorderThickness="0" CornerRadius="4">
+                                BorderThickness="1" BorderBrush="Transparent" CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- The template replaces the theme's button entirely, so nothing
+                                 draws a focus ring unless it is drawn here — and the one control
+                                 made keyboard reachable on purpose would be the one that never
+                                 shows where the keyboard is.
+
+                                 The ring is the border and nothing else. Written as a background
+                                 instead, and declared after IsPressed, it won: among triggers
+                                 active at the same time the last one sets the property, and a
+                                 button takes keyboard focus on mouse-down — so from the first
+                                 click onwards, holding the chevron down looked exactly like
+                                 hovering it. -->
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Fill" Property="BorderBrush"
+                                        Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Fill" Property="Background"
                                         Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
@@ -389,17 +406,6 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Fill" Property="Background"
                                         Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
-                            </Trigger>
-                            <!-- The template replaces the theme's button entirely, so nothing
-                                 draws a focus ring unless it is drawn here. Without it the one
-                                 control made keyboard reachable on purpose is the one that does
-                                 not show where the keyboard is. -->
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Fill" Property="Background"
-                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                                <Setter TargetName="Fill" Property="BorderThickness" Value="1" />
-                                <Setter TargetName="Fill" Property="BorderBrush"
-                                        Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4" />
@@ -708,7 +714,7 @@
                      as "button" without this. -->
                 <Button x:Name="FileTypesButton" Style="{StaticResource ChevronButton}"
                         Margin="0,0,16,0" Click="OnFileTypes"
-                        ToolTipService.ShowOnDisabled="True"
+                        PreviewMouseLeftButtonDown="OnFileTypesButtonDown"
                         AutomationProperties.Name="{loc:Loc Types.Title}">
                     <ui:SymbolIcon Symbol="ChevronDown24" FontSize="12" />
                 </Button>
@@ -769,7 +775,6 @@
                                     TextAlignment="{loc:LangProp StartAlignment}"
                                     PlaceholderText="{loc:Loc Types.Custom.Placeholder}"
                                     ClearButtonEnabled="True"
-                                    ContextMenu="{StaticResource QueryBoxMenu}"
                                     TextChanged="OnTypeExtensionsChanged" />
                         <TextBlock Text="{loc:Loc Types.Custom.Hint}" TextWrapping="Wrap"
                                    MaxWidth="240" Opacity="0.6" FontSize="11" Margin="0,4,0,0" />

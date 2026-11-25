@@ -461,10 +461,8 @@ Every bucket off with an empty extension box excludes files exactly as thoroughl
 switch does, so it is reported as a query problem rather than as an empty result — see below.
 
 The extension box is something people **paste** into — out of a wiki, a chat message, a
-spreadsheet column — and a single-line WPF text box keeps the newlines. So the separators include
-`
-` and `
-`, the no-break space that comes with a web page, and the Arabic comma, which is how
+spreadsheet column — and a single-line WPF text box keeps the newlines. So the separators include CR and LF,
+the no-break space that comes with a web page, and the Arabic comma, which is how
 this gets typed on an Arabic keyboard. Without them a pasted list collapsed into one token that
 no file could match, while the label counted it as an active type: silent, and lying about itself.
 Anything still carrying whitespace or a control character after parsing is dropped rather than

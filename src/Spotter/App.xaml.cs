@@ -106,19 +106,38 @@ public partial class App : Application
                 return false;
             }
 
-            _singleInstance = mutex;
+            EventWaitHandle signal;
             try
             {
-                ShowSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+                signal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
             }
             catch (Exception ex)
             {
-                Log.Write("adopted ownership but could not create the show signal: " + ex.Message);
+                // Taking the slot without being able to answer for it is the exact state this
+                // whole mechanism exists to prevent: the name would be held by a process that
+                // creates no show signal, so the next launch finds "already running", has
+                // nothing to signal and gives up. Put it back and stay as we were.
+                mutex.Dispose();
+                Log.Write("could not take over: the show signal could not be created — " + ex.Message);
+                return false;
             }
 
+            _singleInstance = mutex;
+            ShowSignal = signal;
             SecondaryInstance = false;
             Log.Write("the owning instance has gone; this window has taken over");
             return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // The owner created the name in the Global namespace, which needs a privilege this
+            // process does not have — opening such an object is allowed, creating one is not.
+            // So this can never succeed, and retrying it every few seconds would do nothing but
+            // write a log line every few seconds for as long as the window is open.
+            AdoptionImpossible = true;
+            Log.Write($"cannot ever take over {_claimedName}: creating it needs a privilege this "
+                      + "process does not have. No longer watching.");
+            return false;
         }
         catch (Exception ex)
         {
@@ -126,6 +145,12 @@ public partial class App : Application
             return false;
         }
     }
+
+    /// <summary>
+    /// Set when a handover is not merely unavailable now but impossible for this process, so the
+    /// window can stop watching rather than failing on a timer forever.
+    /// </summary>
+    internal static bool AdoptionImpossible { get; private set; }
 
     /// <summary>
     /// The one settings instance for the process. Loaded once here: the window used to load its

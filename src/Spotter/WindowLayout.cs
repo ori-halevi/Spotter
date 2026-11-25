@@ -235,10 +235,22 @@ internal static class WindowLayout
         }
 
         // Nowhere to step: a window already filling its screen. Overlapping exactly is still the
-        // wrong answer, so take the one offset that is guaranteed to be on the screen the window
-        // is already on — the work area's own corner, nudged by one step.
+        // wrong answer, so walk in from the work area's own corner instead — by `index` steps, so
+        // the third extra window does not land on the second.
+        //
+        // Clamped rather than trusted. The first version of this took the corner plus one step at
+        // the window's full size and checked it with IsUsable alone, which was the one placement
+        // path exempt from the rule the method had just introduced: a window sized to fill the
+        // work area then hung exactly one step off the right and the bottom — and the bottom is
+        // the status bar, which is the part this was written to stop losing.
         Rect work = Displays.Containing(bounds).WorkArea;
-        Rect corner = new Rect(work.Left + step, work.Top + step, bounds.Width, bounds.Height);
+        double slackX = Math.Max(0, work.Width - bounds.Width);
+        double slackY = Math.Max(0, work.Height - bounds.Height);
+        Rect corner = new Rect(
+            work.Left + Math.Min(index * step, slackX),
+            work.Top + Math.Min(index * step, slackY),
+            bounds.Width, bounds.Height);
+
         return IsUsable(corner) ? corner : bounds;
     }
 

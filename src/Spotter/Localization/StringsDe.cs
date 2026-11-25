@@ -139,7 +139,7 @@ internal static class StringsDe
             ["Menu.Filter.FilesOnly"] = "Nur Dateien",
             ["Menu.Filter.FoldersOnly"] = "Nur Ordner",
             ["Menu.Filter.Reset"] = "Alle Suchoptionen zurücksetzen",
-            ["Menu.Filter.Reset.Tip"] = "Zurück zu Dateien und Ordnern, ohne Groß-/Kleinschreibung, ohne Regex, mit Unterordnern. Dateitypen wieder alle.",
+            ["Menu.Filter.Reset.Tip"] = "Zurück zu Dateien und Ordnern, ohne Groß-/Kleinschreibung, ohne Regex, mit Unterordnern. Alle Dateitypen.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "Öffnen",
@@ -181,7 +181,7 @@ internal static class StringsDe
             ["Status.Ready"] = "Bereit — {0} ({1})",
             ["Status.IndexFailed"] = "Indizierung fehlgeschlagen: {0}",
             ["Status.HotkeyTaken"] = "Die Tastenkombination {0} wird bereits von einer anderen App verwendet.",
-            ["Status.NotSaved"] = "Nicht gespeichert — das erste Spotter-Fenster besitzt die Einstellungsdatei. Dieses übernimmt, wenn jenes geschlossen wird.",
+            ["Status.NotSaved"] = "Nicht gespeichert — Einstellungen gehören dem ersten Fenster.",
             ["Status.Demo"] = "DEMOMODUS — {0} (keine Engine, Pfad bleibt leer)",
             ["Status.Found"] = "{0} in {1} ms",
             ["Status.Searching.Suffix"] = " …",
@@ -277,7 +277,7 @@ internal static class StringsDe
 
             ["Options.Searching"] = "Suche",
             ["Options.SearchAsYouType"] = "Suchen während der Eingabe",
-            ["Options.RememberFilters"] = "Die Schalter „Dateien“ und „Ordner“ und die Dateitypen merken",
+            ["Options.RememberFilters"] = "Dateien, Ordner und Dateitypen merken",
             ["Options.RememberFilters.Hint"] = "Aus: beide sind bei jedem Start eingeschaltet. Ein Fenster, das mit einem ausgeschalteten Schalter öffnet, findet davon nichts — und sieht aus, als wäre die Datei einfach nicht da. Die Liste der Dateitypen folgt derselben Einstellung.",
             ["Options.SearchAsYouType.On"] = "Jeder getippte Buchstabe und jede geänderte Einstellung startet eine neue Suche.",
             ["Options.SearchAsYouType.Off"] = "Es wird nichts gesucht, bis Sie Suchen oder Enter drücken. Nützlich auf einem ausgelasteten Rechner oder wenn eine Suche fast die ganze Platte trifft.",
