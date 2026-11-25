@@ -91,9 +91,14 @@ that field red and says why, instead of quietly returning zero results that look
 
 ---
 
-## 📸 Screenshot
+## 📸 Screenshots
 
 ![Spotter](docs/screenshot.png)
+
+Right-to-left, in Hebrew — the same window, mirrored by the language rather than by a separate
+layout:
+
+![Spotter in Hebrew](docs/screenshot-he.png)
 
 ---
 
