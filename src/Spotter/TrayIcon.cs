@@ -20,6 +20,9 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Real exit requested, as opposed to closing to the tray.</summary>
     public event Action ExitRequested;
 
+    /// <summary>A second window of the app, as its own instance, requested from the menu.</summary>
+    public event Action NewInstanceRequested;
+
     /// <summary>
     /// The menu and the icon, kept so Dispose can release them.
     ///
@@ -57,6 +60,13 @@ public sealed class TrayIcon : IDisposable
         show.Font = _boldFont = new Font(show.Font, FontStyle.Bold);   // marks it as the default action
         show.Click += (_, __) => ShowRequested?.Invoke();
         menu.Items.Add(show);
+        menu.Items.Add(new ToolStripSeparator());
+        // Reachable from here as well as from inside the window, because the window is exactly
+        // what is not on screen when the tray icon is the thing being clicked.
+        ToolStripMenuItem newInstance =
+            new ToolStripMenuItem(Localization.Lang.Tr("Tray.NewInstance"));
+        newInstance.Click += (_, __) => NewInstanceRequested?.Invoke();
+        menu.Items.Add(newInstance);
         menu.Items.Add(new ToolStripSeparator());
         ToolStripMenuItem exit = new ToolStripMenuItem(Localization.Lang.Tr("Tray.Exit"));
         exit.Click += (_, __) => ExitRequested?.Invoke();

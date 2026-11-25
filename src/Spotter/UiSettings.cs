@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
@@ -267,8 +267,25 @@ public sealed class UiSettings
     /// defaults, and every setting plus the whole search history was gone with nothing said. The
     /// window is small but the loss is total and silent, which is the worst combination.
     /// </summary>
+    private static bool _loggedSecondarySkip;
+
     public void Save()
     {
+        // An extra instance (--new-instance) reads this file and never writes it. Save replaces
+        // the whole document, so the second window to close would otherwise roll back everything
+        // the first one changed — its window geometry, its column widths, and any option the user
+        // had just set in Options. One owner of the file, chosen the same way the show signal and
+        // the hotkey are: whichever instance claimed the single-instance slot.
+        if (App.SecondaryInstance)
+        {
+            if (!_loggedSecondarySkip)
+            {
+                _loggedSecondarySkip = true;
+                Log.Write("not saving settings: this is an extra instance");
+            }
+            return;
+        }
+
         if (_unreadable)
         {
             // These settings are defaults standing in for a file that could not be read. Writing

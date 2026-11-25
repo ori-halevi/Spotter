@@ -199,6 +199,11 @@
             <Separator />
             <MenuItem Header="{loc:Loc Menu.SearchAgain}" InputGestureText="F5" Click="OnSearchAgain" />
             <MenuItem Header="{loc:Loc Menu.ClearAllFields}" Click="OnClearAllFields" />
+            <Separator />
+            <!-- The one place in the window that is about the app rather than about a file or a
+                 field, which is why a second window is offered from here. -->
+            <MenuItem Header="{loc:Loc Menu.NewInstance}" InputGestureText="Ctrl+N"
+                      Click="OnNewInstance" />
         </ContextMenu>
 
         <ContextMenu x:Key="HeaderMenu" Opened="OnHeaderMenuOpened">
@@ -304,7 +309,7 @@
              itself to Windows as the system-menu button, so that one click opens the system menu
              and two close the window. See "the system-menu icon" in MainWindow.xaml.cs for why
              that cannot be a mouse handler here. -->
-        <ui:TitleBar Grid.Row="0" Title="Spotter">
+        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="Spotter">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon x:Name="TitleIcon"
                               Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />

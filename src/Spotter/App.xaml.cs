@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -30,6 +30,29 @@ public partial class App : Application
     private const string ShowEventName = @"Spotter.Show";
 
     /// <summary>
+    /// Asks for a window of its own instead of handing over to the instance already running.
+    /// Survives elevation: ElevationTask passes the command line through to the elevated copy, so
+    /// a new instance started from an unelevated window is still a new instance once it comes
+    /// back up with administrator rights.
+    /// </summary>
+    private const string NewInstanceFlag = "--new-instance";
+
+    /// <summary>
+    /// True in a process that found another instance already running and carried on anyway. It is
+    /// the extra window, not the one that owns the machine-wide pieces, and three things follow
+    /// from that: it does not register the restore hotkey (Windows gives a combination to one
+    /// window only), it does not listen for the show signal, and it never writes the settings
+    /// file — see <see cref="UiSettings.Save"/> for why that one matters most.
+    /// </summary>
+    internal static bool SecondaryInstance { get; private set; }
+
+    /// <summary>
+    /// This process's command line, so a new instance can be started the way this one was: a
+    /// --demo window spawns another demo window, --lang he another Hebrew one.
+    /// </summary>
+    private static string[] _launchArgs = Array.Empty<string>();
+
+    /// <summary>
     /// Set by a second launch to ask the running instance to come to the front. A named event
     /// rather than SetForegroundWindow on its MainWindowHandle, because an instance sitting in
     /// the tray has no main window handle at all — and that is exactly when someone re-launches.
@@ -47,7 +70,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        string[] args = e?.Args ?? Array.Empty<string>();
+        string[] args = _launchArgs = e?.Args ?? Array.Empty<string>();
 
         // Results arrive on engine worker threads, so a throw there kills the process with
         // nothing but a Windows Error Reporting entry and an exception code. Log it instead.
@@ -84,9 +107,16 @@ public partial class App : Application
         }
 
         // Every launch otherwise re-reads the file table of every volume. Two or three instances
-        // contending for the same disks turned a 60 s index into minutes, so a second launch
-        // hands over to the one already running instead of piling on.
-        if (ClaimSingleInstance() == InstanceClaim.AlreadyRunning)
+        // contending for the same disks turned a 60 s index into minutes, so an ordinary second
+        // launch hands over to the one already running instead of piling on — which is also what
+        // the tray icon and the restore hotkey rely on, since clicking the shortcut again is how
+        // most people bring a hidden window back.
+        //
+        // --new-instance is the deliberate exception: a second window on request, paid for with
+        // that second pass over the drives. The claim is still attempted first, so the very first
+        // window is the owning instance whether or not it was asked for with the flag.
+        InstanceClaim claim = ClaimSingleInstance();
+        if (claim == InstanceClaim.AlreadyRunning && !HasFlag(args, NewInstanceFlag))
         {
             if (!SignalExistingInstance())
             {
@@ -98,6 +128,11 @@ public partial class App : Application
             }
             Shutdown();
             return;
+        }
+        SecondaryInstance = claim == InstanceClaim.AlreadyRunning;
+        if (SecondaryInstance)
+        {
+            Log.Write("extra instance (--new-instance): no hotkey, no show signal, settings not saved");
         }
 
         // Now elevated and the only instance: pay forward the prompt the user just approved, so
@@ -180,6 +215,52 @@ public partial class App : Application
             // Almost always "the user said No" to the UAC prompt. Carry on unelevated; the
             // window explains what is missing and offers the button again.
             Log.Write("elevation declined or failed: " + ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Starts another copy of this executable with a window of its own. Returns false only if the
+    /// process could not be started at all, which the caller reports — a request that does
+    /// nothing and says nothing is indistinguishable from the app being broken.
+    ///
+    /// No "runas" verb and no elevation work here: a child process inherits this one's token, so
+    /// started from the elevated window it is elevated too, with no second UAC prompt. Started
+    /// from an unelevated one it elevates itself exactly as a fresh launch would.
+    /// </summary>
+    internal static bool StartAnotherInstance()
+    {
+        try
+        {
+            ProcessStartInfo start = new ProcessStartInfo(Environment.ProcessPath)
+            {
+                UseShellExecute = true,
+                // Whatever folder the app was launched from may since have been deleted, and an
+                // invalid working directory fails the launch rather than being ignored.
+                WorkingDirectory = AppContext.BaseDirectory,
+            };
+
+            // This process's own switches first, so the new window is the same kind of window:
+            // --demo, --noelevate and --lang all have to carry over. Any --new-instance already
+            // there is dropped and re-added once, rather than accumulating one per generation.
+            foreach (string arg in _launchArgs)
+            {
+                if (!arg.Equals(NewInstanceFlag, StringComparison.OrdinalIgnoreCase))
+                {
+                    start.ArgumentList.Add(arg);
+                }
+            }
+            start.ArgumentList.Add(NewInstanceFlag);
+
+            // The new window has to be allowed to take the foreground from us; without this it
+            // opens behind this one, looking like nothing happened.
+            AllowSetForegroundWindow(ASFW_ANY);
+            Process.Start(start);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Write("could not start another instance: " + ex.Message);
             return false;
         }
     }

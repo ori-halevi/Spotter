@@ -135,11 +135,21 @@ public partial class MainWindow
         {
             _tray = new TrayIcon { Visible = true };
             _tray.ShowRequested += RestoreFromTray;
+            _tray.NewInstanceRequested += () => OnNewInstance(this, new RoutedEventArgs());
             _tray.ExitRequested += () =>
             {
                 _reallyExiting = true;
                 Close();
             };
+        }
+
+        // Not in an extra instance: RegisterHotKey gives a combination to exactly one window, so
+        // the second registration fails by definition. Reporting that as "the hotkey is taken"
+        // would be true and useless — it is taken by this app's own first window, which is where
+        // it belongs, since that is the instance a restore is meant to bring back.
+        if (App.SecondaryInstance)
+        {
+            return;
         }
 
         if (Hotkey.TryParse(_settings.RestoreHotkey, out ModifierKeys modifiers, out Key key))
@@ -468,6 +478,7 @@ public partial class MainWindow
 
         FilenameBox.Focus();
         UpdateRefreshButton();      // a query restored from the last session counts as one to re-run
+        ApplyInstanceTitle();
 
         if (TryStartDemoMode())
         {
@@ -582,8 +593,24 @@ public partial class MainWindow
     /// Re-renders everything this window writes from code. Called when the language changes; the
     /// XAML looks after itself, because <c>{loc:Loc}</c> is a binding.
     /// </summary>
+    /// <summary>
+    /// Names an extra instance in the title bar and the taskbar. Two identical windows called
+    /// "Spotter" is the opposite of what a second window is for — the point is to tell the two
+    /// searches apart — and it is also the only visible sign that this is the window whose
+    /// settings and geometry are not written back.
+    /// </summary>
+    private void ApplyInstanceTitle()
+    {
+        if (!App.SecondaryInstance)
+        {
+            return;
+        }
+        Title = WindowTitleBar.Title = Lang.Tr("Window.ExtraInstance");
+    }
+
     private void Relocalize()
     {
+        ApplyInstanceTitle();
         _readyLine = BuildReadyLine();
         _searchButtonLabel = null;      // force the Content assignment through
         UpdateSearchButton();
@@ -1070,6 +1097,25 @@ public partial class MainWindow
         {
             OnSearchAgain(sender, e);
             e.Handled = true;
+        }
+        else if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OnNewInstance(sender, e);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Opens a second window of the app, as its own process — see
+    /// <see cref="App.StartAnotherInstance"/>. A process rather than another window here because
+    /// each window needs its own engine, and the engine's cache is per instance; two windows in
+    /// one process would read every drive twice just the same.
+    /// </summary>
+    private void OnNewInstance(object sender, RoutedEventArgs e)
+    {
+        if (!App.StartAnotherInstance())
+        {
+            Dialogs.Info(this, Lang.Tr("Dialog.NewInstanceFailed"), MessageBoxImage.Warning);
         }
     }
 

@@ -339,6 +339,16 @@ Three things that also mattered:
   eight times a second, is the whole of that.
 - `App.xaml.cs` holds a single-instance mutex. Without it, each launch started another full index
   of every volume; three concurrent instances turned a 55 s index into minutes of disk contention.
+  That is why an ordinary second launch hands over to the running window rather than opening its
+  own — the behaviour the tray icon and the restore hotkey both depend on.
+- More than one instance is available on request: `--new-instance`, `Ctrl+N`, "New instance" in the
+  results background menu, or the same item in the tray menu. Each one is a real second process
+  with its own engine and its own full index pass, which is the cost of the feature and the reason
+  it is not the default. An extra instance is deliberately not the owning one: it registers no
+  restore hotkey (`RegisterHotKey` gives a combination to one window only), does not listen for the
+  show signal, says so in its title bar, and never writes the settings file — `Save` replaces the
+  whole document, so the second window to close would otherwise roll back everything the first had
+  changed, including options just set in Options.
 
 ## Development elevation
 
@@ -379,10 +389,11 @@ Keyboard: in the results, Enter opens, Alt+Enter properties, Ctrl+A selects all,
 paths, Ctrl+S exports, Del / Shift+Del delete, Esc returns to the search box. In a query field,
 Enter searches immediately instead of waiting out the debounce, and Esc clears that field —
 pressing it again, now that the field is empty, resets all three. Down opens the history in the
-name field and the folder completions in the folder field. F5 re-runs the search from anywhere in
-the window, and the refresh button at the start of the name field does the same with the mouse —
-it is there because the one thing a live index cannot do is tell you about a file that has not been
-written yet, so waiting for one means re-running the same query repeatedly.
+name field and the folder completions in the folder field. Ctrl+N opens a second instance. F5
+re-runs the search from anywhere in the window, and the refresh button at the start of the name
+field does the same with the mouse — it is there because the one thing a live index cannot do is
+tell you about a file that has not been written yet, so waiting for one means re-running the same
+query repeatedly.
 
 Every gesture printed in a menu is a real binding. Two of them were not when the menus were first
 written, which is worth stating because a menu is where users go to *learn* the shortcuts: an
