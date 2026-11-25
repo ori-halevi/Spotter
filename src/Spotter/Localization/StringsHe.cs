@@ -98,7 +98,7 @@ internal static class StringsHe
             ["Types.Other"] = "כל השאר",
             ["Types.Other.Tip"] = "כל קובץ ששום קטגוריה אחרת לא תופסת, כולל קבצים בלי סיומת בכלל.",
             ["Types.Custom"] = "סיומות נוספות",
-            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Placeholder"] = "bak, tmp, sqlite",
             ["Types.Custom.Hint"] = "נכללות בנוסף למה שמסומן למעלה. כדי למצוא רק אותן, יש לבטל את סימון הסוגים.",
             ["Toolbar.ActiveOptions.Tip"] = "האפשרויות שמוגדרות כעת בשדות החיפוש. לכל שדה יש כפתור אפשרויות משלו.",
             ["Toolbar.Search"] = "חיפוש",
@@ -170,7 +170,7 @@ internal static class StringsHe
             ["Menu.Filter.FilesOnly"] = "קבצים בלבד",
             ["Menu.Filter.FoldersOnly"] = "תיקיות בלבד",
             ["Menu.Filter.Reset"] = "איפוס כל אפשרויות החיפוש",
-            ["Menu.Filter.Reset.Tip"] = "חזרה לקבצים ותיקיות, בלי התאמת רישיות, בלי ביטוי רגולרי, כולל תיקיות משנה.",
+            ["Menu.Filter.Reset.Tip"] = "חזרה לקבצים ותיקיות, בלי התאמת רישיות, בלי ביטוי רגולרי, כולל תיקיות משנה. וסוגי הקבצים חוזרים לכולם.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "פתיחה",
@@ -308,7 +308,7 @@ internal static class StringsHe
 
             ["Options.Searching"] = "חיפוש",
             ["Options.SearchAsYouType"] = "חיפוש תוך כדי הקלדה",
-            ["Options.RememberFilters"] = "לזכור את המתגים \"קבצים\" ו\"תיקיות\"",
+            ["Options.RememberFilters"] = "לזכור את המתגים \"קבצים\" ו\"תיקיות\" ואת סוגי הקבצים",
             ["Options.RememberFilters.Hint"] = "כשכבוי: שניהם נדלקים מחדש בכל הפעלה. חלון שנפתח כשאחד מהם כבוי לא מוצא דבר מאותו סוג, ונראה כאילו הקובץ פשוט לא קיים. רשימת סוגי הקבצים נוהגת לפי אותה הגדרה.",
             ["Options.SearchAsYouType.On"] = "חיפוש חדש מתחיל בכל אות שמוקלדת או בכל שינוי הגדרה.",
             ["Options.SearchAsYouType.Off"] = "שום דבר לא נחפש עד ללחיצה על חיפוש או על Enter. שימושי במחשב עמוס, או כששאילתה מתאימה לרוב הדיסק.",

@@ -214,16 +214,47 @@ internal static class WindowLayout
         // follows the interface scale because the title bar it is measured in does.
         double step = 32 * UiScale.Current;
 
-        for (int n = index; n > 0; n--)
+        // Down-and-right first, then up-and-left. A window parked against the bottom or the
+        // right edge has no usable candidate in the positive direction at all — and the old
+        // fallback was to return the position unchanged, which put the new window exactly on top
+        // of the one it was supposed to step clear of. That is the outcome this method exists to
+        // prevent, arrived at silently: the user sees a click on "+" that appears to do nothing,
+        // and clicks it again.
+        foreach (int direction in new[] { 1, -1 })
         {
-            Rect moved = new Rect(bounds.Left + n * step, bounds.Top + n * step,
-                                  bounds.Width, bounds.Height);
-            if (IsUsable(moved))
+            for (int n = index; n > 0; n--)
             {
-                return moved;
+                Rect moved = new Rect(bounds.Left + direction * n * step,
+                                      bounds.Top + direction * n * step,
+                                      bounds.Width, bounds.Height);
+                if (IsUsable(moved) && WithinWorkArea(moved))
+                {
+                    return moved;
+                }
             }
         }
-        return bounds;
+
+        // Nowhere to step: a window already filling its screen. Overlapping exactly is still the
+        // wrong answer, so take the one offset that is guaranteed to be on the screen the window
+        // is already on — the work area's own corner, nudged by one step.
+        Rect work = Displays.Containing(bounds).WorkArea;
+        Rect corner = new Rect(work.Left + step, work.Top + step, bounds.Width, bounds.Height);
+        return IsUsable(corner) ? corner : bounds;
+    }
+
+    /// <summary>
+    /// Whether a window sits wholly inside the work area of the screen it is on.
+    ///
+    /// Stricter than <see cref="IsUsable"/>, and only for cascading. IsUsable asks whether a
+    /// window can be reached and dragged, which a window with its bottom under the taskbar still
+    /// can be; a window the app has just placed there by itself is a different matter, because
+    /// nobody asked for it and the status line is the part that goes missing.
+    /// </summary>
+    private static bool WithinWorkArea(Rect bounds)
+    {
+        Rect work = Displays.Containing(bounds).WorkArea;
+        return bounds.Left >= work.Left && bounds.Top >= work.Top
+            && bounds.Right <= work.Right && bounds.Bottom <= work.Bottom;
     }
 
     /// <summary>

@@ -447,6 +447,11 @@ for.
 would still drop files whose extension nobody listed, and the label would say nothing was filtered
 while results went missing.
 
+A leading dot introduces an extension rather than cancelling it: `.env` is a settings file and
+`env` is in the code bucket, so reading a dotfile as extensionless put it in "everything else"
+while the panel listed `env` under code — the filter contradicting its own tooltip. The common
+dotfiles are listed, so `.gitignore` and `.editorconfig` are found by what they are.
+
 The custom extensions are an additional bucket rather than a restriction on the ticked ones. The
 other reading — "only these" — is fine in isolation and wrong in combination: with every category
 still on, typing `mkv` would have to either mean nothing or silently throw the categories away. To
@@ -454,6 +459,20 @@ find only `.iso`, untick the categories.
 
 Every bucket off with an empty extension box excludes files exactly as thoroughly as the Files
 switch does, so it is reported as a query problem rather than as an empty result — see below.
+
+The extension box is something people **paste** into — out of a wiki, a chat message, a
+spreadsheet column — and a single-line WPF text box keeps the newlines. So the separators include
+`` and `
+`, the no-break space that comes with a web page, and the Arabic comma, which is how
+this gets typed on an Arabic keyboard. Without them a pasted list collapsed into one token that
+no file could match, while the label counted it as an active type: silent, and lying about itself.
+Anything still carrying whitespace or a control character after parsing is dropped rather than
+kept, because an entry that cannot match is worse than no entry — the label counts it.
+
+The box is also stripped of characters XML cannot carry before it reaches the settings file. One
+of them — U+000B, which a paste out of Word can supply — makes `XmlSerializer` throw, and
+`UiSettings.Save` catches and logs, so a single such character would silently abandon every save
+for the rest of the session: window geometry, column widths, language, history, all of it.
 
 The panel is a `Popup`, not a `ContextMenu` like the per-field options buttons, because it ends in
 a text box: a menu swallows the space bar and closes on any letter it takes for an access key. Its

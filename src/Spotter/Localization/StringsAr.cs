@@ -91,7 +91,7 @@ internal static class StringsAr
             ["Types.Other"] = "كل ما عدا ذلك",
             ["Types.Other.Tip"] = "كل ملف لا تطالب به أي فئة أخرى، بما في ذلك الملفات بلا امتداد أصلًا.",
             ["Types.Custom"] = "امتدادات أخرى",
-            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Placeholder"] = "bak, tmp, sqlite",
             ["Types.Custom.Hint"] = "تُضاف إلى ما هو محدَّد أعلاه. للبحث عنها وحدها، أزل التحديد عن الأنواع.",
             ["Toolbar.ActiveOptions.Tip"] = "الخيارات المحددة حاليًا في حقول البحث. زر الخيارات في كل حقل يغيّر خياراته وحده.",
             ["Toolbar.Search"] = "بحث",
@@ -163,7 +163,7 @@ internal static class StringsAr
             ["Menu.Filter.FilesOnly"] = "الملفات فقط",
             ["Menu.Filter.FoldersOnly"] = "المجلدات فقط",
             ["Menu.Filter.Reset"] = "إعادة تعيين جميع خيارات البحث",
-            ["Menu.Filter.Reset.Tip"] = "العودة إلى الملفات والمجلدات، دون مطابقة حالة الأحرف، ودون تعبير عادي، مع تضمين المجلدات الفرعية.",
+            ["Menu.Filter.Reset.Tip"] = "العودة إلى الملفات والمجلدات، دون مطابقة حالة الأحرف، ودون تعبير عادي، مع تضمين المجلدات الفرعية. وأنواع الملفات تعود إلى الكل.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "فتح",
@@ -340,7 +340,7 @@ internal static class StringsAr
 
             ["Options.Searching"] = "البحث",
             ["Options.SearchAsYouType"] = "البحث أثناء الكتابة",
-            ["Options.RememberFilters"] = "تذكّر مفتاحَي «الملفات» و«المجلدات»",
+            ["Options.RememberFilters"] = "تذكّر مفتاحَي «الملفات» و«المجلدات» وأنواع الملفات",
             ["Options.RememberFilters.Hint"] = "عند الإيقاف: يبدأ المفتاحان مُشغَّلين في كل تشغيل. النافذة التي تُفتح وأحدهما مُطفأ لا تجد شيئًا من ذلك النوع، فتبدو كأن الملف غير موجود أصلًا. وقائمة أنواع الملفات تتبع الإعداد نفسه.",
             ["Options.SearchAsYouType.On"] = "يبدأ بحث جديد مع كل حرف تكتبه ومع كل تغيير في الإعدادات.",
             ["Options.SearchAsYouType.Off"] = "لا يُجرى أي بحث حتى تضغط «بحث» أو Enter. مفيد على جهاز مشغول، أو عندما يطابق الاستعلام معظم القرص.",

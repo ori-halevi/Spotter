@@ -75,21 +75,28 @@ public static class FileKinds
 
         Add(map, FileKind.Video,
             "mp4 m4v mkv avi mov wmv flv f4v webm mpg mpeg mpe m2v ts m2ts mts vob ogv "
-            + "3gp 3g2 rm rmvb divx asf mxf braw r3d");
+            + "3gp 3g2 rm rmvb divx asf mxf braw r3d "
+            // Subtitles. Not video files, but "show me what is beside my videos" is the
+            // search people actually run, and a subtitle in "everything else" answers it
+            // with silence.
+            + "srt ass ssa vtt sub idx sbv smi");
 
         Add(map, FileKind.Audio,
             "mp3 wav wave flac aac m4a m4b ogg oga opus wma aiff aif aifc alac ape wv "
-            + "mid midi mod xm s3m cue dsf dff");
+            + "mid midi mod xm s3m cue dsf dff mka ac3 dts eac3 amr au ra caf aa aax");
 
         Add(map, FileKind.Document,
             "pdf doc docx dot dotx rtf odt txt text log md markdown "
             + "xls xlsx xlsm xlt xltx csv tsv ods "
             + "ppt pptx pps ppsx pot potx odp "
-            + "epub mobi azw azw3 djvu fb2 chm pages numbers key one tex bib vsd vsdx msg eml");
+            + "epub mobi azw azw3 djvu fb2 chm pages numbers key one tex bib vsd vsdx msg eml "
+            // The macro-enabled trio. xlsm was here and its two siblings were not, so a
+            // Report.docm beside a Report.xlsx was the only one of the pair in Documents.
+            + "docm dotm pptm potm xlsb xps oxps pub vcf ics wpd");
 
         Add(map, FileKind.Archive,
             "zip zipx rar r00 7z tar gz tgz bz2 tbz2 xz txz zst lz lz4 lzma arj lzh ace "
-            + "cab iso img mdf nrg wim pak");
+            + "cab iso img mdf nrg wim pak cbz cbr cb7 sit sitx z lzo par2");
 
         Add(map, FileKind.Code,
             "c h cpp cxx cc hpp hxx cs csx vb fs fsx java kt kts scala go rs swift m mm "
@@ -100,7 +107,13 @@ public static class FileKinds
             + "sh bash zsh fish ps1 psm1 psd1 bat cmd awk sed "
             + "sql ddl prisma graphql gql proto thrift "
             + "asm s inc pas pp dpr ada f90 f95 for cob cbl lisp el clj cljs erl ex exs hs "
-            + "gradle cmake mk tf tfvars patch diff resx csproj sln vcxproj");
+            + "gradle cmake mk tf tfvars patch diff resx csproj sln vcxproj "
+            // vb and fs are listed as sources above and csproj as a project file, so leaving
+            // these two out put VB and F# projects in "everything else" alone.
+            + "vbproj fsproj props targets nuspec ipynb reg "
+            // Reachable only because MaskOf now reads a leading dot as introducing the
+            // extension — see the note there.
+            + "editorconfig gitignore gitattributes npmrc babelrc prettierrc eslintrc");
 
         // Not listed: "makefile" and "dockerfile". They are whole file names rather than
         // extensions, so MaskOf — which reads what follows the last dot — can never match them,
@@ -111,7 +124,16 @@ public static class FileKinds
             "exe msi msix msixbundle appx appxbundle msp mst com scr cpl ocx "
             + "dll sys drv ax efi ko so dylib a lib pdb "
             + "apk aab ipa deb rpm dmg pkg appimage snap flatpak jar war ear "
-            + "vbs wsf hta gadget lnk pif");
+            + "vbs wsf hta gadget lnk pif url msu appinstaller vbe jse");
+
+        // A split RAR set is named .r00 through .r99 — a hundred extensions that are one thing,
+        // and the kind of list nobody maintains by hand. Only .r00 was here, which is the one
+        // part of a split archive a user is least likely to go looking for on its own.
+        for (int part = 0; part < 100; part++)
+        {
+            map["r" + part.ToString("D2", System.Globalization.CultureInfo.InvariantCulture)] =
+                Bit(FileKind.Archive);
+        }
 
         return map;
     }
@@ -188,9 +210,15 @@ public static class FileKinds
 
         int dot = name.LastIndexOf('.');
 
-        // A leading dot is the whole name — ".gitignore" is a dotfile, not an extension — and a
-        // trailing dot leaves nothing to look up.
-        if (dot <= 0 || dot == name.Length - 1)
+        // A trailing dot leaves nothing to look up, and a name with no dot at all has no
+        // extension to read.
+        //
+        // A *leading* dot does count, which this used to refuse. ".env" is a settings file and
+        // "env" is in the code bucket, so reading a dotfile as having no extension dropped it
+        // into "everything else" while the panel listed "env" under code — the filter
+        // contradicting its own tooltip. The common dotfiles are listed under code because of
+        // this, so ".gitignore" and ".editorconfig" are now findable by what they are.
+        if (dot < 0 || dot == name.Length - 1)
         {
             return 0;
         }
@@ -206,9 +234,34 @@ public static class FileKinds
     }
 
     /// <summary>
+    /// Every character this box treats as "next extension".
+    ///
+    /// The line breaks are the ones that matter. A list of extensions is something people paste
+    /// — out of a wiki, a chat message, a spreadsheet column — and a single-line WPF text box
+    /// keeps the newlines in its Text. Without them here, a pasted "mkv⏎iso⏎avi" became one
+    /// token that no file could ever match, while the label counted it as an active type: a
+    /// silent failure that also lied about itself.
+    ///
+    /// The no-break space comes from web pages, and the Arabic comma from an Arabic keyboard —
+    /// this app ships in Arabic, and there "iso، mkv" is the natural way to type this.
+    /// </summary>
+    private static readonly char[] ExtensionSeparators =
+    {
+        ',', ';', ' ', '\t', '\r', '\n', '|', '/',
+        ' ',   // no-break space
+        '،',   // Arabic comma
+        '、',   // ideographic comma
+    };
+
+    /// <summary>
     /// Reads the custom-extension box: a free list of extensions, separated by whatever the user
-    /// reached for. Leading dots and asterisks are stripped, so "iso, .mkv, *.img" all work —
-    /// insisting on one spelling of the same intention would be this box's only hard edge.
+    /// reached for. Dots and asterisks are stripped from both ends, so "iso", ".mkv", "*.img" and
+    /// a half-typed "mkv." all mean the same thing — insisting on one spelling of the same
+    /// intention would be this box's only hard edge.
+    ///
+    /// Anything still carrying whitespace, a control character or a path character is dropped
+    /// rather than kept. It cannot match a file name, and an entry that cannot match is worse
+    /// than no entry at all, because the label counts it as a type that is letting files through.
     /// </summary>
     public static HashSet<string> ParseExtensions(string text)
     {
@@ -218,16 +271,28 @@ public static class FileKinds
             return set;
         }
 
-        foreach (string piece in text.Split(new[] { ',', ';', ' ', '\t', '|', '/' },
-                                            StringSplitOptions.RemoveEmptyEntries))
+        foreach (string piece in text.Split(ExtensionSeparators, StringSplitOptions.RemoveEmptyEntries))
         {
-            string extension = piece.Trim().TrimStart('*', '.');
-            if (extension.Length > 0 && extension.Length <= 16)
+            string extension = piece.Trim().Trim('*', '.');
+            if (extension.Length > 0 && extension.Length <= 16 && IsUsableExtension(extension))
             {
                 set.Add(extension);
             }
         }
         return set;
+    }
+
+    private static bool IsUsableExtension(string extension)
+    {
+        foreach (char c in extension)
+        {
+            if (char.IsWhiteSpace(c) || char.IsControl(c)
+                || c == '*' || c == '?' || c == ':' || c == '/' || c == '\\')
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -368,8 +433,13 @@ public sealed class FileKindFilter
 
         if (_extensions != null && name != null)
         {
+            // The same rule MaskOf uses, including the leading dot and its 16-character guard:
+            // typing "env" in the box has to reach ".env" for the same reason ticking "code and
+            // settings" does, and a pathological name should not allocate a long string for a
+            // lookup that ParseExtensions has already made impossible.
             int dot = name.LastIndexOf('.');
-            if (dot > 0 && dot < name.Length - 1 && _extensions.Contains(name.Substring(dot + 1)))
+            if (dot >= 0 && dot < name.Length - 1 && name.Length - dot - 1 <= 16
+                && _extensions.Contains(name.Substring(dot + 1)))
             {
                 return true;
             }

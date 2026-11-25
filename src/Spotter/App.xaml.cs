@@ -304,7 +304,20 @@ public partial class App : Application
             Process[] all = Process.GetProcessesByName(self.ProcessName);
             try
             {
-                return Math.Max(0, all.Length - 1);
+                // Only this logon session's copies. GetProcessesByName spans the machine, so on
+                // a shared or remote-desktop machine another signed-in user's windows — which
+                // are not on this desktop and cannot be stepped clear of — would push this one
+                // further and further down the screen.
+                int here = 0;
+                foreach (Process p in all)
+                {
+                    try
+                    {
+                        if (p.SessionId == self.SessionId) here++;
+                    }
+                    catch { /* exited between the listing and the read */ }
+                }
+                return Math.Max(0, here - 1);
             }
             finally
             {

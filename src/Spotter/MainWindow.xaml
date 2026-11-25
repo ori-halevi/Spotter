@@ -375,7 +375,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Fill" Background="{TemplateBinding Background}"
-                                CornerRadius="4">
+                                BorderThickness="0" CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
@@ -389,6 +389,17 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Fill" Property="Background"
                                         Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                            </Trigger>
+                            <!-- The template replaces the theme's button entirely, so nothing
+                                 draws a focus ring unless it is drawn here. Without it the one
+                                 control made keyboard reachable on purpose is the one that does
+                                 not show where the keyboard is. -->
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Fill" Property="Background"
+                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                <Setter TargetName="Fill" Property="BorderThickness" Value="1" />
+                                <Setter TargetName="Fill" Property="BorderBrush"
+                                        Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4" />
@@ -438,7 +449,8 @@
                  offers it where a window can. -->
             <ui:TitleBar.TrailingContent>
                 <Button Style="{StaticResource CaptionButton}" Click="OnNewInstance"
-                        ToolTip="{loc:Loc NewInstance.Tip}">
+                        ToolTip="{loc:Loc NewInstance.Tip}"
+                        AutomationProperties.Name="{loc:Loc Menu.NewInstance}">
                     <ui:SymbolIcon Symbol="Add24" FontSize="14" />
                 </Button>
             </ui:TitleBar.TrailingContent>
@@ -692,8 +704,12 @@
                 <ui:ToggleSwitch x:Name="FilesToggle" IsChecked="True"
                                  Margin="0,0,2,0" Checked="OnQueryChanged" Unchecked="OnQueryChanged"
                                  ToolTip="{loc:Loc Toolbar.Files.Tip}" />
+                <!-- ToolTip becomes HelpText, not Name, so an icon-only button is announced
+                     as "button" without this. -->
                 <Button x:Name="FileTypesButton" Style="{StaticResource ChevronButton}"
-                        Margin="0,0,16,0" Click="OnFileTypes">
+                        Margin="0,0,16,0" Click="OnFileTypes"
+                        ToolTipService.ShowOnDisabled="True"
+                        AutomationProperties.Name="{loc:Loc Types.Title}">
                     <ui:SymbolIcon Symbol="ChevronDown24" FontSize="12" />
                 </Button>
                 <ui:ToggleSwitch x:Name="FoldersToggle" Content="{loc:Loc Toolbar.Folders}" IsChecked="True"
@@ -726,7 +742,7 @@
                         LayoutTransform="{x:Static local:UiScale.Transform}"
                         MinWidth="240" Padding="10,8,10,8">
                     <StackPanel>
-                        <TextBlock x:Name="FileTypesHeading" FontWeight="SemiBold"
+                        <TextBlock FontWeight="SemiBold"
                                    Text="{loc:Loc Types.Title}" Margin="0,0,0,6" />
 
                         <!-- Shown indeterminate when some are on, which is the state the eight
@@ -753,6 +769,7 @@
                                     TextAlignment="{loc:LangProp StartAlignment}"
                                     PlaceholderText="{loc:Loc Types.Custom.Placeholder}"
                                     ClearButtonEnabled="True"
+                                    ContextMenu="{StaticResource QueryBoxMenu}"
                                     TextChanged="OnTypeExtensionsChanged" />
                         <TextBlock Text="{loc:Loc Types.Custom.Hint}" TextWrapping="Wrap"
                                    MaxWidth="240" Opacity="0.6" FontSize="11" Margin="0,4,0,0" />

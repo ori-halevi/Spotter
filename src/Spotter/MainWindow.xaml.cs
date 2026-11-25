@@ -414,7 +414,11 @@ public partial class MainWindow
         // The file types follow the same rule, for the same reason: a filter that silently
         // survives a restart is a filter that gets blamed on the search. Only the list is built
         // unconditionally — it is the panel's rows, not a setting.
-        _typeMask = rememberFilters ? _settings.FileTypeMask : FileKinds.AllMask;
+        // Masked on the way in. Only the filter object normalises what it is handed, so an
+        // out-of-range bit — a hand-edited file, or one written by a build with a ninth bucket —
+        // would survive in the field, behave as "everything", and still fail the
+        // _typeMask == AllMask test that OnAllTypesClicked turns on.
+        _typeMask = (rememberFilters ? _settings.FileTypeMask : FileKinds.AllMask) & FileKinds.AllMask;
         TypeExtensionsBox.Text = rememberFilters ? _settings.FileTypeExtensions ?? string.Empty : string.Empty;
         BuildFileTypesList();
         UpdateFileTypesUi();
@@ -470,7 +474,11 @@ public partial class MainWindow
         _settings.IncludeFiles = FilesToggle.IsChecked == true;
         _settings.IncludeFolders = FoldersToggle.IsChecked == true;
         _settings.FileTypeMask = _typeMask;
-        _settings.FileTypeExtensions = TypeExtensionsBox.Text ?? string.Empty;
+        // Stripped of anything XML cannot carry. XmlSerializer throws on a control character,
+        // and UiSettings.Save catches and logs — so one such character, which a paste out of
+        // Word can supply, would silently abandon every save for the rest of the session: window
+        // geometry, column widths, language, history, all of it, not just this box.
+        _settings.FileTypeExtensions = XmlSafe(TypeExtensionsBox.Text);
 
         _settings.SortColumn = _sortColumn;
         _settings.SortDescending = _sortDescending;
@@ -607,10 +615,6 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// Re-renders everything this window writes from code. Called when the language changes; the
-    /// XAML looks after itself, because <c>{loc:Loc}</c> is a binding.
-    /// </summary>
-    /// <summary>
     /// Names an extra instance in the title bar and the taskbar. Two identical windows called
     /// "Spotter" is the opposite of what a second window is for — the point is to tell the two
     /// searches apart — and it is also the only visible sign that this is the window whose
@@ -625,6 +629,10 @@ public partial class MainWindow
         Title = WindowTitleBar.Title = Lang.Tr("Window.ExtraInstance");
     }
 
+    /// <summary>
+    /// Re-renders everything this window writes from code. Called when the language changes; the
+    /// XAML looks after itself, because <c>{loc:Loc}</c> is a binding.
+    /// </summary>
     private void Relocalize()
     {
         ApplyInstanceTitle();
@@ -2402,10 +2410,38 @@ public partial class MainWindow
             ? Lang.Tr("Types.Tip")
             : Lang.Tr("Types.Tip") + "\n" + selection;
 
-        // Nothing in the panel means anything while files are excluded outright, and a filter
-        // that can be edited but cannot take effect is a filter that will be blamed for the next
-        // empty result.
-        FileTypesButton.IsEnabled = FilesToggle.IsChecked == true;
+        // Left enabled even while Files is off, which is the opposite of what it did at first.
+        // Disabling it was defensible — nothing in the panel has any effect while files are
+        // excluded outright — but the label still carries the count, so the user was shown an
+        // active narrowing they could neither read nor clear until they switched Files back on,
+        // at which point it took effect again. Being able to undo it matters more than being
+        // stopped from editing something inert.
+    }
+
+    /// <summary>
+    /// Drops the characters an XML document cannot hold. See the call in SaveSettings for why a
+    /// single one of them is worth a helper.
+    /// </summary>
+    private static string XmlSafe(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        System.Text.StringBuilder clean = null;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (System.Xml.XmlConvert.IsXmlChar(text[i]))
+            {
+                clean?.Append(text[i]);
+            }
+            else
+            {
+                clean ??= new System.Text.StringBuilder(text.Length).Append(text, 0, i);
+            }
+        }
+        return clean?.ToString() ?? text;
     }
 
     private FileKindFilter CurrentTypeFilter() =>
@@ -2413,14 +2449,23 @@ public partial class MainWindow
 
     private void OnFileTypes(object sender, RoutedEventArgs e)
     {
-        // Assigned, not toggled. A StaysOpen="False" popup has already closed itself on the
-        // mouse-down that preceded this click, so a toggle reads false and opens it straight
-        // back up — the button would look as though it could not close its own panel.
+        // A StaysOpen="False" popup closes itself on the mouse-down that precedes this click, so
+        // IsOpen always reads false here and a plain toggle would reopen what the user just
+        // dismissed. Assigning true unconditionally fixed that and cost the other half: the
+        // button could never close its own panel.
+        //
+        // So the close is remembered instead. A click arriving within a moment of the panel
+        // closing is that same click, and means "shut it".
+        if ((DateTime.UtcNow - _typesClosedUtc).TotalMilliseconds < 250)
+        {
+            return;
+        }
         FileTypesPopup.IsOpen = true;
 
         // A popup is its own window and does not take focus by being shown, so opening it from
         // the keyboard would otherwise leave the caret behind on the button with nothing in the
-        // panel reachable. At Loaded priority because the rows do not exist until it is laid out.
+        // panel reachable. At Loaded priority because the popup's own visual root does not exist
+        // until it has been laid out — the rows themselves were built long before this.
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded,
             new Action(() => AllTypesBox.Focus()));
     }
@@ -2439,10 +2484,16 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>When the panel last closed, which is how the chevron knows to stay shut.</summary>
+    private DateTime _typesClosedUtc = DateTime.MinValue;
+
     private void OnFileTypesClosed(object sender, EventArgs e)
     {
-        // The extension box only reaches the history and the settings once it has stopped being
-        // typed into, and closing the panel is the clearest moment that has happened.
+        _typesClosedUtc = DateTime.UtcNow;
+
+        // Nothing here is a commit point: the box is read straight out of the control by
+        // CurrentTypeFilter and only reaches the settings file in SaveSettings. This redraw is
+        // belt and braces for a close that did not come through a handler of ours.
         UpdateFileTypesUi();
     }
 

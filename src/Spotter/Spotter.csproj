@@ -36,10 +36,10 @@
        which build a bug report came from. Keep <Version> and the version in app.manifest's
        <assemblyIdentity> in step; they are two separate declarations of the same thing. -->
   <PropertyGroup>
-    <Version>2.2.0</Version>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
-    <InformationalVersion>2.2.0</InformationalVersion>
+    <Version>2.2.1</Version>
+    <AssemblyVersion>2.2.1.0</AssemblyVersion>
+    <FileVersion>2.2.1.0</FileVersion>
+    <InformationalVersion>2.2.1</InformationalVersion>
     <Product>Spotter</Product>
     <AssemblyTitle>Spotter</AssemblyTitle>
     <Description>Instant file search over the NTFS master file table.</Description>

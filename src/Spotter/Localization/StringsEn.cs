@@ -73,7 +73,7 @@ internal static class StringsEn
             ["Types.Other"] = "Everything else",
             ["Types.Other.Tip"] = "Every file no other category claims, including files with no extension at all.",
             ["Types.Custom"] = "Other extensions",
-            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Placeholder"] = "bak, tmp, sqlite",
             ["Types.Custom.Hint"] = "Let through on top of whatever is ticked above. To find only these, untick the lot.",
             ["Toolbar.ActiveOptions.Tip"] = "Options currently set on the query fields. Each field's options button changes its own.",
             ["Toolbar.Search"] = "Search",
@@ -145,7 +145,7 @@ internal static class StringsEn
             ["Menu.Filter.FilesOnly"] = "Files only",
             ["Menu.Filter.FoldersOnly"] = "Folders only",
             ["Menu.Filter.Reset"] = "Reset all search options",
-            ["Menu.Filter.Reset.Tip"] = "Back to files and folders, no case matching, no regex, subfolders included.",
+            ["Menu.Filter.Reset.Tip"] = "Back to files and folders, no case matching, no regex, subfolders included. File types back to all.",
 
             // ---- result menu -------------------------------------------------------------------------
             ["Menu.Open"] = "Open",
@@ -286,7 +286,7 @@ internal static class StringsEn
 
             ["Options.Searching"] = "Searching",
             ["Options.SearchAsYouType"] = "Search as you type",
-            ["Options.RememberFilters"] = "Remember the Files and Folders switches",
+            ["Options.RememberFilters"] = "Remember the Files and Folders switches and the file types",
             ["Options.RememberFilters.Hint"] = "Off: both start every run switched on. A window that opens with one of them off finds nothing of that kind and looks as though the file is simply not there. The file type list follows the same setting.",
             ["Options.SearchAsYouType.On"] = "A new search starts on each letter typed or setting changed.",
             ["Options.SearchAsYouType.Off"] = "Nothing is searched until you press Search or Enter. Useful on a busy machine, or when a query matches most of the disk.",
