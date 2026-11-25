@@ -181,6 +181,7 @@ internal static class StringsEs
             ["Status.Ready"] = "Listo — {0} ({1})",
             ["Status.IndexFailed"] = "Error al indizar: {0}",
             ["Status.HotkeyTaken"] = "La combinación {0} ya la está usando otra aplicación.",
+            ["Status.NotSaved"] = "No guardado: el archivo de ajustes pertenece a la primera ventana de Spotter. Esta lo asumirá si aquella se cierra.",
             ["Status.Demo"] = "MODO DEMO — {0} (sin motor, la ruta queda vacía)",
             ["Status.Found"] = "{0} en {1} ms",
             ["Status.Searching.Suffix"] = " …",

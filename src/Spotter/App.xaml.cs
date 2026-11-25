@@ -10,7 +10,12 @@ namespace Spotter;
 
 public partial class App : Application
 {
-    private Mutex _singleInstance;
+    /// <summary>
+    /// The single-instance mutex while this process owns it. Static because the role is the
+    /// process's, not an Application object's, and because it can now be taken up after startup
+    /// — see <see cref="TryAdoptOwnership"/>.
+    /// </summary>
+    private static Mutex _singleInstance;
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -73,6 +78,54 @@ public partial class App : Application
     /// Null when this process is not the owning instance.
     /// </summary>
     internal static EventWaitHandle ShowSignal { get; private set; }
+
+    /// <summary>
+    /// Takes over the machine-wide role when the instance that held it has gone.
+    ///
+    /// Ownership used to be decided once, at startup, and never looked at again — so closing the
+    /// first window left the second one permanently crippled: no restore hotkey, deaf to the
+    /// show signal, and writing no settings, while the user had no way to know any of it. With
+    /// the "+" button that is one click and one close away, not a developer's command line.
+    ///
+    /// Returns true on the call that succeeds, so the caller can light up the pieces that come
+    /// with the job. Cheap enough to poll: an attempt to open a named mutex and nothing else.
+    /// </summary>
+    internal static bool TryAdoptOwnership()
+    {
+        if (!SecondaryInstance || _claimedName == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            Mutex mutex = new Mutex(initiallyOwned: true, _claimedName, out bool createdNew);
+            if (!createdNew)
+            {
+                mutex.Dispose();        // the owner is still there, which is the normal answer
+                return false;
+            }
+
+            _singleInstance = mutex;
+            try
+            {
+                ShowSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+            }
+            catch (Exception ex)
+            {
+                Log.Write("adopted ownership but could not create the show signal: " + ex.Message);
+            }
+
+            SecondaryInstance = false;
+            Log.Write("the owning instance has gone; this window has taken over");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Write("could not take over as the owning instance: " + ex.Message);
+            return false;
+        }
+    }
 
     /// <summary>
     /// The one settings instance for the process. Loaded once here: the window used to load its
@@ -454,13 +507,34 @@ public partial class App : Application
         return claim;
     }
 
+    /// <summary>
+    /// The mutex name this process settled on — Global or Local, whichever worked. Kept so that
+    /// an extra window can try the same one again later; claiming a different scope than the
+    /// owner used would be claiming nothing.
+    /// </summary>
+    private static string _claimedName;
+
     private InstanceClaim TryClaim(string name, out bool retryElsewhere)
     {
         retryElsewhere = false;
         try
         {
-            _singleInstance = new Mutex(initiallyOwned: true, name, out bool createdNew);
-            return createdNew ? InstanceClaim.Owner : InstanceClaim.AlreadyRunning;
+            Mutex mutex = new Mutex(initiallyOwned: true, name, out bool createdNew);
+            _claimedName = name;
+
+            if (!createdNew)
+            {
+                // Let go of it at once. A named mutex lives as long as any handle to it is open,
+                // so an extra instance keeping this one would hold the name open after the owner
+                // exited — leaving the slot taken by a process that creates no show signal and
+                // registers no hotkey. The next launch would then find "already running", fail
+                // to signal anything, and give up, with the hotkey answering to nobody.
+                mutex.Dispose();
+                return InstanceClaim.AlreadyRunning;
+            }
+
+            _singleInstance = mutex;
+            return InstanceClaim.Owner;
         }
         catch (UnauthorizedAccessException)
         {

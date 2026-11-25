@@ -212,6 +212,7 @@ internal static class StringsHe
             ["Status.Ready"] = "מוכן — {0} ({1})",
             ["Status.IndexFailed"] = "האינדוקס נכשל: {0}",
             ["Status.HotkeyTaken"] = "מקש הקיצור {0} כבר תפוס על ידי יישום אחר.",
+            ["Status.NotSaved"] = "לא נשמר — החלון הראשון של Spotter הוא הבעלים של קובץ ההגדרות. החלון הזה יקבל את התפקיד אם הראשון ייסגר.",
             ["Status.Demo"] = "מצב הדגמה — {0} (בלי מנוע, עמודת הנתיב ריקה)",
             ["Status.Found"] = "{0} תוך {1} מ״ש",
             ["Status.Searching.Suffix"] = " …",

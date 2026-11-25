@@ -189,6 +189,7 @@ internal static class StringsEn
             ["Status.Ready"] = "Ready — {0} ({1})",
             ["Status.IndexFailed"] = "Indexing failed: {0}",
             ["Status.HotkeyTaken"] = "Hotkey {0} is already in use by another app.",
+            ["Status.NotSaved"] = "Not saved — the first Spotter window owns the settings file. This one takes over if that window closes.",
             ["Status.Demo"] = "DEMO MODE — {0} (no engine, Path is blank)",
             ["Status.Found"] = "{0} in {1} ms",
             ["Status.Searching.Suffix"] = " …",

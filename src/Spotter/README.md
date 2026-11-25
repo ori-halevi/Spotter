@@ -462,7 +462,8 @@ switch does, so it is reported as a query problem rather than as an empty result
 
 The extension box is something people **paste** into — out of a wiki, a chat message, a
 spreadsheet column — and a single-line WPF text box keeps the newlines. So the separators include
-`` and `
+`
+` and `
 `, the no-break space that comes with a web page, and the Arabic comma, which is how
 this gets typed on an Arabic keyboard. Without them a pasted list collapsed into one token that
 no file could match, while the label counted it as an active type: silent, and lying about itself.
@@ -478,6 +479,30 @@ The panel is a `Popup`, not a `ContextMenu` like the per-field options buttons, 
 a text box: a menu swallows the space bar and closes on any letter it takes for an access key. Its
 rows are built in code from `FileKinds.All`, so a new kind means a line in the enum and a label in
 the six tables, not a line of XAML.
+
+### Being the extra window is a role, not a property of the process
+
+Ownership of the machine-wide pieces — the single-instance mutex, the show signal, the restore
+hotkey and the settings file — used to be decided once at startup and never looked at again. That
+was survivable while a second instance needed a command-line flag. The "+" button made it one
+click, and then closing the first window left the second one crippled for the rest of its life:
+no hotkey, deaf to a re-launch, and silently writing nothing.
+
+Worse, the extra instance held a handle to the mutex it could not serve. A named mutex lives as
+long as any handle to it is open, so after the owner exited the *name* was still taken while the
+show signal was gone — a later launch found "already running", had nothing to signal, and gave
+up. Verified rather than assumed: with a second handle open, `TryOpenExisting` still succeeds
+after the first is disposed, and fails once both are.
+
+So an extra instance now lets go of the mutex immediately, and polls every four seconds to see
+whether the name has come free. When it has, it takes the mutex, registers the hotkey, starts
+listening for the show signal, drops "extra instance" from its title and starts writing settings.
+Polled because there is nothing to wait on: a mutex gives no "released" notification to anyone
+not already queued on it.
+
+Until that happens, the two actions that used to claim success and revert — Save in Options,
+which applies theme, language and scale live, and Clear history, which empties the list on screen
+— say in the status bar that the file belongs to the other window.
 
 The hotkey uses `RegisterHotKey`, not the machine-wide low-level keyboard hook the 1.5.1 app
 installed. The hook sees every keystroke on the system and filters them itself; this asks Windows

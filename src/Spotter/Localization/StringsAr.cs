@@ -205,6 +205,7 @@ internal static class StringsAr
             ["Status.Ready"] = "جاهز — {0} ({1})",
             ["Status.IndexFailed"] = "فشلت الفهرسة: {0}",
             ["Status.HotkeyTaken"] = "مفتاح الاختصار {0} مستخدَم بالفعل من تطبيق آخر.",
+            ["Status.NotSaved"] = "لم يُحفظ — ملف الإعدادات يخص نافذة Spotter الأولى. وهذه النافذة تتولّى الدور إن أُغلقت تلك.",
             ["Status.Demo"] = "وضع العرض — {0} (بدون محرك، وعمود المسار فارغ)",
             ["Status.Found"] = "{0} في {1} مللي ثانية",
             ["Status.Searching.Suffix"] = " …",

@@ -149,24 +149,82 @@ public partial class MainWindow
         // it belongs, since that is the instance a restore is meant to bring back.
         if (App.SecondaryInstance)
         {
+            WatchForOwnership();
             return;
         }
 
-        if (Hotkey.TryParse(_settings.RestoreHotkey, out ModifierKeys modifiers, out Key key))
+        RegisterRestoreHotkey();
+    }
+
+    private void RegisterRestoreHotkey()
+    {
+        if (_hotkey != null || !Hotkey.TryParse(_settings.RestoreHotkey,
+                                                out ModifierKeys modifiers, out Key key))
         {
-            _hotkey = new Hotkey();
-            _hotkey.Pressed += ToggleFromHotkey;
-            if (_hotkey.Register(this, modifiers, key))
-            {
-                Log.Write($"global hotkey registered: {_settings.RestoreHotkey}");
-            }
-            else
-            {
-                // Silent failure here is the worst outcome: the user presses the key forever and
-                // nothing happens. Say so where they will see it.
-                StatusText.Text = Lang.Tr("Status.HotkeyTaken", _settings.RestoreHotkey);
-            }
+            return;
         }
+
+        _hotkey = new Hotkey();
+        _hotkey.Pressed += ToggleFromHotkey;
+        if (_hotkey.Register(this, modifiers, key))
+        {
+            Log.Write($"global hotkey registered: {_settings.RestoreHotkey}");
+        }
+        else
+        {
+            // Silent failure here is the worst outcome: the user presses the key forever and
+            // nothing happens. Say so where they will see it.
+            StatusText.Text = Lang.Tr("Status.HotkeyTaken", _settings.RestoreHotkey);
+        }
+    }
+
+    private DispatcherTimer _ownershipWatch;
+
+    /// <summary>
+    /// Waits for the owning instance to go, and steps into the job when it does.
+    ///
+    /// Being the extra window is a role, not a property of the process, and it used to be
+    /// treated as the latter: close the first window and the second was left for the rest of its
+    /// life with no restore hotkey, deaf to a re-launch, and silently writing no settings. The
+    /// "+" button put that one click away.
+    ///
+    /// Polled rather than waited on, because there is no handle to wait on — the owner is
+    /// identified by a mutex it holds, and a mutex gives no "released" notification to anyone not
+    /// already queued on it. Every four seconds is far below the rate at which an app closes and
+    /// costs one attempt to open a named object.
+    /// </summary>
+    private void WatchForOwnership()
+    {
+        _ownershipWatch = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromSeconds(4),
+        };
+        _ownershipWatch.Tick += (_, __) =>
+        {
+            if (!App.TryAdoptOwnership())
+            {
+                return;
+            }
+
+            _ownershipWatch.Stop();
+            _ownershipWatch = null;
+
+            // Everything the role carries, in the order a first instance would have taken it.
+            RegisterRestoreHotkey();
+            ListenForShowRequests();
+
+            // Back to the plain name: the title said "extra instance" to mark the window whose
+            // settings are not written, and that is no longer true of it.
+            Title = WindowTitleBar.Title = "Spotter";
+
+            // From here the settings file is this window's to write. Its copy was read at launch
+            // and the instance that has just gone may have written over it since, so the first
+            // save will carry this window's state rather than that one's — which is the right
+            // way round: this is the window the user still has in front of them.
+            SaveSettings();
+            _settings.Save();
+        };
+        _ownershipWatch.Start();
     }
 
     /// <summary>
@@ -315,6 +373,24 @@ public partial class MainWindow
         if (dialog.Saved)
         {
             ApplySettingsChange();
+            WarnIfNotWritten();
+        }
+    }
+
+    /// <summary>
+    /// Says so when a save did not reach the file.
+    ///
+    /// An extra window reads the settings and never writes them, which is deliberate — but it
+    /// still applies a change live, so Options previews the new theme, language and scale, the
+    /// dialog closes on Save, and the setting is gone at exit with nothing having said a word.
+    /// Clearing the history is worse: the list empties on screen while the file keeps every
+    /// term. Until this window takes the role over, the least it can do is not claim success.
+    /// </summary>
+    private void WarnIfNotWritten()
+    {
+        if (App.SecondaryInstance)
+        {
+            StatusText.Text = Lang.Tr("Status.NotSaved");
         }
     }
 
@@ -1262,6 +1338,7 @@ public partial class MainWindow
         RefreshHistoryList();
         HistoryPopup.IsOpen = false;
         FilenameBox.Focus();
+        WarnIfNotWritten();
     }
 
     private bool _ready;

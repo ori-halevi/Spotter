@@ -186,6 +186,7 @@ internal static class StringsRu
             ["Status.Ready"] = "Готово — {0} ({1})",
             ["Status.IndexFailed"] = "Ошибка индексирования: {0}",
             ["Status.HotkeyTaken"] = "Сочетание {0} уже занято другим приложением.",
+            ["Status.NotSaved"] = "Не сохранено — файлом настроек владеет первое окно Spotter. Это окно примет роль, если то закроется.",
             ["Status.Demo"] = "ДЕМОРЕЖИМ — {0} (без движка, столбец пути пуст)",
             ["Status.Found"] = "{0} за {1} мс",
             ["Status.Searching.Suffix"] = " …",

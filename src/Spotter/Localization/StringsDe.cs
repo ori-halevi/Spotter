@@ -181,6 +181,7 @@ internal static class StringsDe
             ["Status.Ready"] = "Bereit — {0} ({1})",
             ["Status.IndexFailed"] = "Indizierung fehlgeschlagen: {0}",
             ["Status.HotkeyTaken"] = "Die Tastenkombination {0} wird bereits von einer anderen App verwendet.",
+            ["Status.NotSaved"] = "Nicht gespeichert — das erste Spotter-Fenster besitzt die Einstellungsdatei. Dieses übernimmt, wenn jenes geschlossen wird.",
             ["Status.Demo"] = "DEMOMODUS — {0} (keine Engine, Pfad bleibt leer)",
             ["Status.Found"] = "{0} in {1} ms",
             ["Status.Searching.Suffix"] = " …",
