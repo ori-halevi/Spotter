@@ -83,6 +83,23 @@ internal static class StringsHe
             ["Toolbar.Files.Tip"] = "לכלול קבצים בתוצאות. כיבוי יציג תיקיות בלבד.",
             ["Toolbar.Folders"] = "תיקיות",
             ["Toolbar.Folders.Tip"] = "לכלול תיקיות בתוצאות. כיבוי יציג קבצים בלבד.",
+
+            // The file types panel behind the Files switch.
+            ["Types.Title"] = "סוגי קבצים",
+            ["Types.All"] = "כל הסוגים",
+            ["Types.Tip"] = "אילו סוגי קבצים נכללים. כולם, אלא אם נקבע אחרת.",
+            ["Types.Image"] = "תמונות",
+            ["Types.Video"] = "וידאו",
+            ["Types.Audio"] = "אודיו",
+            ["Types.Document"] = "מסמכים",
+            ["Types.Archive"] = "ארכיונים",
+            ["Types.Code"] = "קוד והגדרות",
+            ["Types.Program"] = "תוכנות והתקנות",
+            ["Types.Other"] = "כל השאר",
+            ["Types.Other.Tip"] = "כל קובץ ששום קטגוריה אחרת לא תופסת, כולל קבצים בלי סיומת בכלל.",
+            ["Types.Custom"] = "סיומות נוספות",
+            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Hint"] = "נכללות בנוסף למה שמסומן למעלה. כדי למצוא רק אותן, יש לבטל את סימון הסוגים.",
             ["Toolbar.ActiveOptions.Tip"] = "האפשרויות שמוגדרות כעת בשדות החיפוש. לכל שדה יש כפתור אפשרויות משלו.",
             ["Toolbar.Search"] = "חיפוש",
             ["Toolbar.SearchAgain"] = "חיפוש מחדש",
@@ -277,6 +294,7 @@ internal static class StringsHe
             ["Problem.Folder"] = "בתיקייה — {0}",
             ["Problem.Size"] = "גודל — {0}",
             ["Problem.NoKinds"] = "יש להפעיל קבצים או תיקיות — כששניהם כבויים אין מה למצוא.",
+            ["Problem.NoTypes"] = "לא סומן שום סוג קובץ — יש לפתוח את הרשימה שלייד ״קבצים״ ולסמן סוג, או להפעיל תיקיות.",
             ["Problem.Unreadable"] = "לא ניתן לקריאה",
 
             // ---- options window ---------------------------------------------------------------------------------------------------
@@ -291,7 +309,7 @@ internal static class StringsHe
             ["Options.Searching"] = "חיפוש",
             ["Options.SearchAsYouType"] = "חיפוש תוך כדי הקלדה",
             ["Options.RememberFilters"] = "לזכור את המתגים \"קבצים\" ו\"תיקיות\"",
-            ["Options.RememberFilters.Hint"] = "כשכבוי: שניהם נדלקים מחדש בכל הפעלה. חלון שנפתח כשאחד מהם כבוי לא מוצא דבר מאותו סוג, ונראה כאילו הקובץ פשוט לא קיים.",
+            ["Options.RememberFilters.Hint"] = "כשכבוי: שניהם נדלקים מחדש בכל הפעלה. חלון שנפתח כשאחד מהם כבוי לא מוצא דבר מאותו סוג, ונראה כאילו הקובץ פשוט לא קיים. רשימת סוגי הקבצים נוהגת לפי אותה הגדרה.",
             ["Options.SearchAsYouType.On"] = "חיפוש חדש מתחיל בכל אות שמוקלדת או בכל שינוי הגדרה.",
             ["Options.SearchAsYouType.Off"] = "שום דבר לא נחפש עד ללחיצה על חיפוש או על Enter. שימושי במחשב עמוס, או כששאילתה מתאימה לרוב הדיסק.",
 

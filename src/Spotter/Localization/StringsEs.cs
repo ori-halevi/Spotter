@@ -52,6 +52,23 @@ internal static class StringsEs
             ["Toolbar.Files.Tip"] = "Incluir archivos en los resultados. Desactívelo para ver solo carpetas.",
             ["Toolbar.Folders"] = "Carpetas",
             ["Toolbar.Folders.Tip"] = "Incluir carpetas en los resultados. Desactívelo para ver solo archivos.",
+
+            // The file types panel behind the Files switch.
+            ["Types.Title"] = "Tipos de archivo",
+            ["Types.All"] = "Todos los tipos",
+            ["Types.Tip"] = "Qué tipos de archivo cuentan. Todos, salvo que se indique otra cosa.",
+            ["Types.Image"] = "Imágenes",
+            ["Types.Video"] = "Vídeo",
+            ["Types.Audio"] = "Audio",
+            ["Types.Document"] = "Documentos",
+            ["Types.Archive"] = "Archivos comprimidos",
+            ["Types.Code"] = "Código y configuración",
+            ["Types.Program"] = "Programas e instaladores",
+            ["Types.Other"] = "Todo lo demás",
+            ["Types.Other.Tip"] = "Todos los archivos que ninguna otra categoría reclama, incluidos los archivos sin extensión alguna.",
+            ["Types.Custom"] = "Otras extensiones",
+            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Hint"] = "Se añaden a lo marcado arriba. Para buscar solo estas, desmarque los tipos.",
             ["Toolbar.ActiveOptions.Tip"] = "Opciones activas en los campos de búsqueda. El botón de opciones de cada campo cambia solo las suyas.",
             ["Toolbar.Search"] = "Buscar",
             ["Toolbar.SearchAgain"] = "Buscar de nuevo",
@@ -245,6 +262,7 @@ internal static class StringsEs
             ["Problem.Folder"] = "En la carpeta — {0}",
             ["Problem.Size"] = "Tamaño — {0}",
             ["Problem.NoKinds"] = "Active Archivos o Carpetas: con los dos desactivados no hay nada que encontrar.",
+            ["Problem.NoTypes"] = "No hay ningún tipo de archivo marcado: abra la lista junto a Archivos y marque uno, o active Carpetas.",
             ["Problem.Unreadable"] = "no se puede leer",
 
             // ---- options window ---------------------------------------------------------------------------------------------------
@@ -259,7 +277,7 @@ internal static class StringsEs
             ["Options.Searching"] = "Búsqueda",
             ["Options.SearchAsYouType"] = "Buscar mientras escribe",
             ["Options.RememberFilters"] = "Recordar los interruptores Archivos y Carpetas",
-            ["Options.RememberFilters.Hint"] = "Desactivado: los dos empiezan encendidos en cada ejecución. Una ventana que se abre con uno apagado no encuentra nada de ese tipo, y parece que el archivo simplemente no está.",
+            ["Options.RememberFilters.Hint"] = "Desactivado: los dos empiezan encendidos en cada ejecución. Una ventana que se abre con uno apagado no encuentra nada de ese tipo, y parece que el archivo simplemente no está. La lista de tipos de archivo sigue el mismo ajuste.",
             ["Options.SearchAsYouType.On"] = "Cada letra escrita o ajuste cambiado inicia una búsqueda nueva.",
             ["Options.SearchAsYouType.Off"] = "No se busca nada hasta que pulse Buscar o Entrar. Útil en un equipo cargado, o cuando una consulta coincide con casi todo el disco.",
 

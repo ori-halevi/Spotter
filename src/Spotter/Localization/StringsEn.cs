@@ -58,6 +58,23 @@ internal static class StringsEn
             ["Toolbar.Files.Tip"] = "Include files in the results. Turn off to list folders only.",
             ["Toolbar.Folders"] = "Folders",
             ["Toolbar.Folders.Tip"] = "Include folders in the results. Turn off to list files only.",
+
+            // The file types panel behind the Files switch.
+            ["Types.Title"] = "File types",
+            ["Types.All"] = "All types",
+            ["Types.Tip"] = "Which kinds of file count. All of them unless you say otherwise.",
+            ["Types.Image"] = "Images",
+            ["Types.Video"] = "Video",
+            ["Types.Audio"] = "Audio",
+            ["Types.Document"] = "Documents",
+            ["Types.Archive"] = "Archives",
+            ["Types.Code"] = "Code and settings",
+            ["Types.Program"] = "Programs and installers",
+            ["Types.Other"] = "Everything else",
+            ["Types.Other.Tip"] = "Every file no other category claims, including files with no extension at all.",
+            ["Types.Custom"] = "Other extensions",
+            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Hint"] = "Let through on top of whatever is ticked above. To find only these, untick the lot.",
             ["Toolbar.ActiveOptions.Tip"] = "Options currently set on the query fields. Each field's options button changes its own.",
             ["Toolbar.Search"] = "Search",
             ["Toolbar.SearchAgain"] = "Search again",
@@ -255,6 +272,7 @@ internal static class StringsEn
             ["Problem.Folder"] = "In folder — {0}",
             ["Problem.Size"] = "Size — {0}",
             ["Problem.NoKinds"] = "Turn on Files or Folders — with both off there is nothing to find.",
+            ["Problem.NoTypes"] = "No file type is ticked — open the list beside Files and tick one, or turn Folders on.",
             ["Problem.Unreadable"] = "cannot be read",
 
             // ---- options window ---------------------------------------------------------------------------------------------------
@@ -269,7 +287,7 @@ internal static class StringsEn
             ["Options.Searching"] = "Searching",
             ["Options.SearchAsYouType"] = "Search as you type",
             ["Options.RememberFilters"] = "Remember the Files and Folders switches",
-            ["Options.RememberFilters.Hint"] = "Off: both start every run switched on. A window that opens with one of them off finds nothing of that kind and looks as though the file is simply not there.",
+            ["Options.RememberFilters.Hint"] = "Off: both start every run switched on. A window that opens with one of them off finds nothing of that kind and looks as though the file is simply not there. The file type list follows the same setting.",
             ["Options.SearchAsYouType.On"] = "A new search starts on each letter typed or setting changed.",
             ["Options.SearchAsYouType.Off"] = "Nothing is searched until you press Search or Enter. Useful on a busy machine, or when a query matches most of the disk.",
 

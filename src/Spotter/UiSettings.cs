@@ -152,8 +152,21 @@ public sealed class UiSettings
     ///
     /// The two values above are still written on every exit either way, so turning this on starts
     /// from what was last on screen rather than from a stale pair.
+    ///
+    /// It governs the file type panel too — a filter narrowed to videos for one search is the
+    /// same kind of thing as Folders switched off for one search, and fails the same way.
     /// </summary>
     public bool RememberFileFolderFilters { get; set; }
+
+    /// <summary>
+    /// Which file type buckets are on, as a <see cref="FileKinds"/> mask. Every bucket by default,
+    /// which is also what a settings file written before 2.2.1 deserializes to: the property is
+    /// absent from it, so the initialiser stands.
+    /// </summary>
+    public int FileTypeMask { get; set; } = FileKinds.AllMask;
+
+    /// <summary>The custom extension box, stored as typed rather than as a parsed list.</summary>
+    public string FileTypeExtensions { get; set; } = string.Empty;
 
     /// <summary>
     /// The 1.5.1 "Search On-Demand" option, under the name its tooltip actually described:

@@ -416,6 +416,49 @@ search in hand. "Remember the Files and Folders switches" in Options restores th
 and the two values are written on exit either way, so turning it on carries on from what was last
 on screen.
 
+### File types
+
+**Files** is a switch with a panel behind it: the switch decides whether files appear at all, the
+chevron beside it opens eight buckets — images, video, audio, documents, archives, code and
+settings, programs and installers, everything else — plus a free-text box for extensions no bucket
+covers. The label carries the count while the filter is narrowed, so the row reads "Files (2)"
+rather than looking untouched while half the answers are missing.
+
+Hovering a category lists the extensions it holds, built by inverting the extension table rather
+than written out a second time — a row named "Documents" is a promise about a list the user cannot
+see, and the only way to know whether the extension they want is in it is to be told. "Everything
+else" has no list to show and gets a sentence instead.
+
+Three decisions in that are not obvious.
+
+**The engine cannot do this.** Its name query is an AND of substrings, so "mp4 or mkv or avi" is
+not expressible in it at all. The filter is applied in `SearchEngine.Search`, in the intake
+callback, before the record reaches the queue — not over the finished list. The status count, the
+sort, the export and the folder totals all read the published rows, so a row filtered out later
+would have been counted, sorted and exported first.
+
+**An extension can be in two buckets**, so `FileKinds` maps each extension to a *mask* rather than
+to one kind. `.ts` is TypeScript and an MPEG transport stream, `.img` is a disk image and a raw
+dump, `.a` and `.s` are a static library and assembly source. Forcing each into one bucket means
+choosing which half of the users get a filter that hides what they are looking for.
+
+**"Everything else" is a bucket, not a leftover.** Without it, ticking all seven real categories
+would still drop files whose extension nobody listed, and the label would say nothing was filtered
+while results went missing.
+
+The custom extensions are an additional bucket rather than a restriction on the ticked ones. The
+other reading — "only these" — is fine in isolation and wrong in combination: with every category
+still on, typing `mkv` would have to either mean nothing or silently throw the categories away. To
+find only `.iso`, untick the categories.
+
+Every bucket off with an empty extension box excludes files exactly as thoroughly as the Files
+switch does, so it is reported as a query problem rather than as an empty result — see below.
+
+The panel is a `Popup`, not a `ContextMenu` like the per-field options buttons, because it ends in
+a text box: a menu swallows the space bar and closes on any letter it takes for an access key. Its
+rows are built in code from `FileKinds.All`, so a new kind means a line in the enum and a label in
+the six tables, not a line of XAML.
+
 The hotkey uses `RegisterHotKey`, not the machine-wide low-level keyboard hook the 1.5.1 app
 installed. The hook sees every keystroke on the system and filters them itself; this asks Windows
 for one combination and nothing else. If the combination is already taken the status bar says so
@@ -760,7 +803,9 @@ what they throw, so an unparseable size or a broken regular expression arrived a
 byte for byte the same answer as a perfectly good search that matched nothing. The 1.5.1 app
 checked all three fields up front and coloured the box that failed; this does the same, in the
 status bar rather than a modal dialog, because it runs while you type. Turning both Files and
-Folders off is caught the same way, since it can only ever find nothing.
+Folders off is caught the same way, since it can only ever find nothing — as is a file type panel
+with every bucket unticked, which is the same state reached from the other direction and gets its
+own message, because what the user has to change to fix it is different.
 
 ### Tooltips
 

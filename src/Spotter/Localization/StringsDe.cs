@@ -52,6 +52,23 @@ internal static class StringsDe
             ["Toolbar.Files.Tip"] = "Dateien in die Ergebnisse aufnehmen. Aus: nur Ordner anzeigen.",
             ["Toolbar.Folders"] = "Ordner",
             ["Toolbar.Folders.Tip"] = "Ordner in die Ergebnisse aufnehmen. Aus: nur Dateien anzeigen.",
+
+            // The file types panel behind the Files switch.
+            ["Types.Title"] = "Dateitypen",
+            ["Types.All"] = "Alle Typen",
+            ["Types.Tip"] = "Welche Dateitypen zählen. Ohne Angabe alle.",
+            ["Types.Image"] = "Bilder",
+            ["Types.Video"] = "Video",
+            ["Types.Audio"] = "Audio",
+            ["Types.Document"] = "Dokumente",
+            ["Types.Archive"] = "Archive",
+            ["Types.Code"] = "Code und Einstellungen",
+            ["Types.Program"] = "Programme und Installationsdateien",
+            ["Types.Other"] = "Alles andere",
+            ["Types.Other.Tip"] = "Jede Datei, die keine andere Kategorie beansprucht, einschließlich Dateien ganz ohne Endung.",
+            ["Types.Custom"] = "Weitere Endungen",
+            ["Types.Custom.Placeholder"] = "iso, mkv, bak",
+            ["Types.Custom.Hint"] = "Kommen zu dem hinzu, was oben angekreuzt ist. Nur diese finden: alle Haken entfernen.",
             ["Toolbar.ActiveOptions.Tip"] = "Die derzeit gesetzten Optionen der Suchfelder. Jedes Feld ändert über seine eigene Schaltfläche nur die eigenen.",
             ["Toolbar.Search"] = "Suchen",
             ["Toolbar.SearchAgain"] = "Erneut suchen",
@@ -245,6 +262,7 @@ internal static class StringsDe
             ["Problem.Folder"] = "In Ordner — {0}",
             ["Problem.Size"] = "Größe — {0}",
             ["Problem.NoKinds"] = "Dateien oder Ordner einschalten — mit beidem aus gibt es nichts zu finden.",
+            ["Problem.NoTypes"] = "Kein Dateityp angekreuzt — die Liste neben „Dateien“ öffnen und einen ankreuzen, oder Ordner einschalten.",
             ["Problem.Unreadable"] = "kann nicht gelesen werden",
 
             // ---- options window ---------------------------------------------------------------------------------------------------
@@ -259,7 +277,7 @@ internal static class StringsDe
             ["Options.Searching"] = "Suche",
             ["Options.SearchAsYouType"] = "Suchen während der Eingabe",
             ["Options.RememberFilters"] = "Die Schalter „Dateien“ und „Ordner“ merken",
-            ["Options.RememberFilters.Hint"] = "Aus: beide sind bei jedem Start eingeschaltet. Ein Fenster, das mit einem ausgeschalteten Schalter öffnet, findet davon nichts — und sieht aus, als wäre die Datei einfach nicht da.",
+            ["Options.RememberFilters.Hint"] = "Aus: beide sind bei jedem Start eingeschaltet. Ein Fenster, das mit einem ausgeschalteten Schalter öffnet, findet davon nichts — und sieht aus, als wäre die Datei einfach nicht da. Die Liste der Dateitypen folgt derselben Einstellung.",
             ["Options.SearchAsYouType.On"] = "Jeder getippte Buchstabe und jede geänderte Einstellung startet eine neue Suche.",
             ["Options.SearchAsYouType.Off"] = "Es wird nichts gesucht, bis Sie Suchen oder Enter drücken. Nützlich auf einem ausgelasteten Rechner oder wenn eine Suche fast die ganze Platte trifft.",
 

@@ -411,6 +411,14 @@ public partial class MainWindow
         FilesToggle.IsChecked = !rememberFilters || _settings.IncludeFiles;
         FoldersToggle.IsChecked = !rememberFilters || _settings.IncludeFolders;
 
+        // The file types follow the same rule, for the same reason: a filter that silently
+        // survives a restart is a filter that gets blamed on the search. Only the list is built
+        // unconditionally — it is the panel's rows, not a setting.
+        _typeMask = rememberFilters ? _settings.FileTypeMask : FileKinds.AllMask;
+        TypeExtensionsBox.Text = rememberFilters ? _settings.FileTypeExtensions ?? string.Empty : string.Empty;
+        BuildFileTypesList();
+        UpdateFileTypesUi();
+
         // Never left empty — see UiSettings.SortColumn. A settings file from 2.1.0 or earlier
         // has no value for it at all, which deserializes to the default rather than to null, so
         // upgrading lands on Name by name rather than by accident.
@@ -461,6 +469,8 @@ public partial class MainWindow
         _settings.Subfolders = _subfolders;
         _settings.IncludeFiles = FilesToggle.IsChecked == true;
         _settings.IncludeFolders = FoldersToggle.IsChecked == true;
+        _settings.FileTypeMask = _typeMask;
+        _settings.FileTypeExtensions = TypeExtensionsBox.Text ?? string.Empty;
 
         _settings.SortColumn = _sortColumn;
         _settings.SortDescending = _sortDescending;
@@ -622,6 +632,8 @@ public partial class MainWindow
         _searchButtonLabel = null;      // force the Content assignment through
         UpdateSearchButton();
         DescribeActiveOptions();
+        BuildFileTypesList();           // the rows carry translated names
+        UpdateFileTypesUi();
         UpdateHeaderArrows();           // the headers carry translated names plus a sort arrow
         UpdateSelectionText(null);
         if (_lastStatus != null)
@@ -921,6 +933,11 @@ public partial class MainWindow
             return;
         }
         UpdateRefreshButton();
+        if (ReferenceEquals(sender, FilesToggle))
+        {
+            // The types panel is only reachable while files are included at all.
+            UpdateFileTypesUi();
+        }
         if (ReferenceEquals(sender, DirectoryBox) && !_suppressFolderSuggest)
         {
             UpdateFolderSuggestions();
@@ -1286,6 +1303,7 @@ public partial class MainWindow
         IncludeSubdirectories = _subfolders,
         IncludeFiles = FilesToggle.IsChecked == true,
         IncludeDirectories = FoldersToggle.IsChecked == true,
+        FileTypes = CurrentTypeFilter(),
     };
 
     /// <summary>
@@ -2270,6 +2288,173 @@ public partial class MainWindow
         if (!_subfolders) parts.Add(Lang.Tr("Active.NoSubfolders"));
 
         ActiveOptionsText.Text = parts.Count == 0 ? string.Empty : string.Join("  ·  ", parts);
+    }
+
+    // ---- file types ------------------------------------------------------------------------
+    //
+    // "Files" is a switch with a panel behind it. The switch decides whether files appear at all;
+    // the panel decides which of them do.
+    //
+    // Why a panel rather than a toggle per type in the toolbar: images and videos are two of
+    // eight buckets, and a row that grows a switch per bucket is a row that stops fitting. A
+    // panel costs one click to reach and does not grow the window.
+
+    /// <summary>
+    /// Which buckets are on, as a <see cref="FileKinds"/> mask. The checkboxes are the view of
+    /// this, not the other way round — <see cref="UpdateFileTypesUi"/> writes them from here, so
+    /// every path that changes the selection goes through one place.
+    /// </summary>
+    private int _typeMask = FileKinds.AllMask;
+
+    private readonly Dictionary<FileKind, System.Windows.Controls.CheckBox> _typeBoxes =
+        new Dictionary<FileKind, System.Windows.Controls.CheckBox>();
+
+    /// <summary>
+    /// Builds a row per kind. Called again after a language change rather than relabelled in
+    /// place: the rows are generated from the enum, so recreating them is the same code path as
+    /// creating them, and there is no second copy of it to keep in step.
+    /// </summary>
+    private void BuildFileTypesList()
+    {
+        FileTypesList.Children.Clear();
+        _typeBoxes.Clear();
+
+        foreach (FileKind kind in FileKinds.All)
+        {
+            System.Windows.Controls.CheckBox box = new System.Windows.Controls.CheckBox
+            {
+                Content = Lang.Tr(FileKinds.LabelKey(kind)),
+                Tag = kind,
+                Margin = new Thickness(0, 1, 0, 1),
+
+                // The theme gives a checkbox 32 units of height for 18 of text, which is right
+                // for a form and wrong for a list of eight. The horizontal padding is the gap
+                // between the box and its label and is kept; only the vertical is cut.
+                MinHeight = 0,
+                Padding = new Thickness(11, 2, 11, 2),
+                ToolTip = TypeTip(kind),
+            };
+            box.Click += OnTypeKindClicked;
+            FileTypesList.Children.Add(box);
+            _typeBoxes[kind] = box;
+        }
+    }
+
+    /// <summary>
+    /// What a bucket holds, on hover. A row named "Documents" is a promise about a list of
+    /// extensions the user cannot see, and the only way to know whether the one they are looking
+    /// for is in it is to be told.
+    ///
+    /// Built as a TextBlock rather than handed over as a string, for the wrapping: a plain string
+    /// tooltip is laid out on one line, and the longer lists are over a hundred extensions.
+    /// </summary>
+    private static object TypeTip(FileKind kind)
+    {
+        string body = kind == FileKind.Other
+            ? Lang.Tr("Types.Other.Tip")
+            : FileKinds.ExtensionList(kind);
+
+        return new System.Windows.Controls.TextBlock
+        {
+            Text = body,
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 340,
+
+            // The list is extensions, not words — left to right whatever the UI language is, for
+            // the same reason the size box is. The sentence under "everything else" is prose and
+            // follows the language.
+            FlowDirection = kind == FileKind.Other
+                ? Lang.Instance.FlowDirection
+                : FlowDirection.LeftToRight,
+        };
+    }
+
+    /// <summary>
+    /// The one writer of everything the file type filter puts on screen: the checkboxes, the
+    /// "all" row's three states, the count on the Files label, the button's tooltip and whether
+    /// the panel can be opened at all.
+    /// </summary>
+    private void UpdateFileTypesUi()
+    {
+        FileKindFilter filter = CurrentTypeFilter();
+
+        foreach (KeyValuePair<FileKind, System.Windows.Controls.CheckBox> row in _typeBoxes)
+        {
+            // Assigned, not toggled: Click does not fire for a programmatic change, which is why
+            // the rows are wired to Click rather than to Checked/Unchecked. With the latter this
+            // assignment would re-enter the handler and fight the mask it is drawing.
+            row.Value.IsChecked = filter.Has(row.Key);
+        }
+
+        int on = filter.KindCount;
+        AllTypesBox.IsChecked = on == FileKinds.All.Length ? true
+            : on == 0 ? (bool?)false
+            : null;                     // indeterminate: some on, some off
+
+        // The count stands for how many kinds of file can come back, which is the categories plus
+        // each custom extension — never zero while something is still allowed through.
+        int allowed = on + filter.ExtensionCount;
+        FilesToggle.Content = filter.IsEverything
+            ? Lang.Tr("Toolbar.Files")
+            : Lang.Tr("Toolbar.Files") + " (" + allowed + ")";
+
+        string selection = filter.Describe(Lang.Tr);
+        FileTypesButton.ToolTip = selection == null
+            ? Lang.Tr("Types.Tip")
+            : Lang.Tr("Types.Tip") + "\n" + selection;
+
+        // Nothing in the panel means anything while files are excluded outright, and a filter
+        // that can be edited but cannot take effect is a filter that will be blamed for the next
+        // empty result.
+        FileTypesButton.IsEnabled = FilesToggle.IsChecked == true;
+    }
+
+    private FileKindFilter CurrentTypeFilter() =>
+        new FileKindFilter(_typeMask, FileKinds.ParseExtensions(TypeExtensionsBox.Text));
+
+    private void OnFileTypes(object sender, RoutedEventArgs e)
+    {
+        FileTypesPopup.IsOpen = !FileTypesPopup.IsOpen;
+    }
+
+    private void OnFileTypesClosed(object sender, EventArgs e)
+    {
+        // The extension box only reaches the history and the settings once it has stopped being
+        // typed into, and closing the panel is the clearest moment that has happened.
+        UpdateFileTypesUi();
+    }
+
+    private void OnTypeKindClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.CheckBox box || box.Tag is not FileKind kind)
+        {
+            return;
+        }
+
+        int bit = FileKinds.Bit(kind);
+        _typeMask = box.IsChecked == true ? _typeMask | bit : _typeMask & ~bit;
+        UpdateFileTypesUi();
+        OnQueryChanged(sender, e);
+    }
+
+    private void OnAllTypesClicked(object sender, RoutedEventArgs e)
+    {
+        // A click on an indeterminate "all" turns everything on. Clearing it from there would
+        // mean two clicks to reach the state the user can already see is nearly reached, and
+        // "all" asked for from a partial selection has only one sensible reading.
+        _typeMask = AllTypesBox.IsChecked == true ? FileKinds.AllMask : 0;
+        UpdateFileTypesUi();
+        OnQueryChanged(sender, e);
+    }
+
+    private void OnTypeExtensionsChanged(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+        UpdateFileTypesUi();
+        OnQueryChanged(sender, e);
     }
 
     private void OnSizePreset(object sender, RoutedEventArgs e)

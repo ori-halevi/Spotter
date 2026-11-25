@@ -353,6 +353,48 @@
             </Setter>
         </Style>
 
+        <!-- The chevron that opens the file types panel, beside the Files switch.
+             A ui:Button is the wrong shape for this: even in its Transparent appearance it draws
+             a border and carries a control's own padding, which measured 20.8 units tall against
+             the switch's 20 and sat 0.8 higher — close enough to look like a mistake rather than
+             a difference. This is the switch's own height, borderless, and shows nothing but the
+             glyph until the pointer is over it. -->
+        <Style x:Key="ChevronButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Fill" Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Fill" Property="Background"
+                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Fill" Property="Background"
+                                        Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </ui:FluentWindow.Resources>
 
     <!-- Everything in the window hangs off this one element, which is what makes a single
@@ -637,9 +679,19 @@
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8"
                         Background="Transparent"
                         ContextMenu="{StaticResource FilterMenu}">
-                <ui:ToggleSwitch x:Name="FilesToggle" Content="{loc:Loc Toolbar.Files}" IsChecked="True"
-                                 Margin="0,0,16,0" Checked="OnQueryChanged" Unchecked="OnQueryChanged"
+                <!-- Content is assigned from code rather than bound, because it carries the
+                     number of file types in effect — "Files (3)". A filter that removes results
+                     has to be visible on the surface that caused it; a count only inside the
+                     panel would mean a search quietly missing half its answers with nothing on
+                     screen to say why. UpdateFileTypesUi owns the text, including after a
+                     language change. -->
+                <ui:ToggleSwitch x:Name="FilesToggle" IsChecked="True"
+                                 Margin="0,0,2,0" Checked="OnQueryChanged" Unchecked="OnQueryChanged"
                                  ToolTip="{loc:Loc Toolbar.Files.Tip}" />
+                <Button x:Name="FileTypesButton" Style="{StaticResource ChevronButton}"
+                        Margin="0,0,16,0" Click="OnFileTypes">
+                    <ui:SymbolIcon Symbol="ChevronDown24" FontSize="12" />
+                </Button>
                 <ui:ToggleSwitch x:Name="FoldersToggle" Content="{loc:Loc Toolbar.Folders}" IsChecked="True"
                                  Margin="0,0,24,0" Checked="OnQueryChanged" Unchecked="OnQueryChanged"
                                  ToolTip="{loc:Loc Toolbar.Folders.Tip}" />
@@ -648,6 +700,60 @@
                 <TextBlock x:Name="ActiveOptionsText" VerticalAlignment="Center" Opacity="0.65"
                            ToolTip="{loc:Loc Toolbar.ActiveOptions.Tip}" />
             </StackPanel>
+
+            <!-- The file types panel. A Popup rather than a ContextMenu, which is what the field
+                 options buttons use: this one ends in a text box, and typing inside a menu fights
+                 the menu's own key handling — a menu swallows the space bar and closes on a
+                 letter it takes for an access key.
+
+                 The rows themselves are built in code from FileKinds.All, so adding a kind means
+                 adding it to the enum and its label to the tables, not here. -->
+            <Popup x:Name="FileTypesPopup" Grid.Row="0"
+                   PlacementTarget="{Binding ElementName=FileTypesButton}"
+                   Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+                   PopupAnimation="Fade" Closed="OnFileTypesClosed">
+                <!-- Its own visual root, so neither the direction nor the scale is inherited and
+                     both are set here. See HistoryPopup for the long version. -->
+                <Border Background="{DynamicResource ApplicationBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                        BorderThickness="1" CornerRadius="6" Margin="0,2,0,0"
+                        FlowDirection="{loc:LangProp FlowDirection}"
+                        LayoutTransform="{x:Static local:UiScale.Transform}"
+                        MinWidth="240" Padding="10,8,10,8">
+                    <StackPanel>
+                        <TextBlock x:Name="FileTypesHeading" FontWeight="SemiBold"
+                                   Text="{loc:Loc Types.Title}" Margin="0,0,0,6" />
+
+                        <!-- Shown indeterminate when some are on, which is the state the eight
+                             rows below can put it in. It replaces the mirror of the outer Files
+                             switch that this panel could have had: the switch outside already
+                             turns files off altogether, and a second control doing the same thing
+                             one level down would be two ways to say one thing. -->
+                        <!-- Height and padding to match the rows below, which BuildFileTypesList
+                             sets for the same reason: the theme's 32 units for 18 of text is a
+                             form control's spacing, not a list's. -->
+                        <CheckBox x:Name="AllTypesBox" Content="{loc:Loc Types.All}"
+                                  MinHeight="0" Padding="11,2,11,2" Margin="0,1,0,1"
+                                  IsThreeState="False" Click="OnAllTypesClicked" />
+                        <Separator Margin="0,4,0,4" />
+                        <StackPanel x:Name="FileTypesList" />
+
+                        <Separator Margin="0,4,0,4" />
+                        <TextBlock Text="{loc:Loc Types.Custom}" Opacity="0.8" Margin="0,0,0,3" />
+                        <!-- Left to right whatever the language is, like the size box: what goes
+                             in it is a list of extensions, not words. -->
+                        <ui:TextBox x:Name="TypeExtensionsBox"
+                                    Padding="8,2" MinHeight="0"
+                                    FlowDirection="LeftToRight"
+                                    TextAlignment="{loc:LangProp StartAlignment}"
+                                    PlaceholderText="{loc:Loc Types.Custom.Placeholder}"
+                                    ClearButtonEnabled="True"
+                                    TextChanged="OnTypeExtensionsChanged" />
+                        <TextBlock Text="{loc:Loc Types.Custom.Hint}" TextWrapping="Wrap"
+                                   MaxWidth="240" Opacity="0.6" FontSize="11" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Popup>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right"
                         VerticalAlignment="Center" Margin="0,0,0,8">

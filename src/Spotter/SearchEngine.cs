@@ -233,15 +233,39 @@ public sealed class SearchEngine : IDisposable
         }
 
         GClass282 compiled = query.Compile();
+
+        // The file-type filter is ours, not the engine's: the engine's name query is an AND of
+        // substrings, and "mp4 or mkv or avi" cannot be written in it at all. So it is applied
+        // here, on the way in.
+        //
+        // At intake rather than on the finished list, which matters for more than tidiness. The
+        // status line's count, the sort, the export and the folder totals all read the published
+        // rows, so a row that is filtered out later would have been counted, sorted and exported
+        // first. Dropping it before it is enqueued means every one of those numbers is about what
+        // is on screen.
+        //
+        // The snapshot is captured once, outside the callback: the field is free to be replaced by
+        // the next search while engine workers are still calling this one.
+        FileKindFilter types = query.FileTypes;
+        bool filtering = types != null && !types.IsEverything;
+
         _activeSearch = _engine.method_17(
             compiled,
             false,
             record =>
             {
-                if (Volatile.Read(ref _searchGeneration) == generation)
+                if (Volatile.Read(ref _searchGeneration) != generation)
                 {
-                    _incoming.Enqueue(record);
+                    return;
                 }
+
+                // Folders are governed by the Folders switch alone — a folder has no type, and
+                // "only videos" has never meant "and no folders".
+                if (filtering && !record.method_0() && !types.Allows(record.string_0))
+                {
+                    return;
+                }
+                _incoming.Enqueue(record);
             },
             () =>
             {
@@ -494,6 +518,13 @@ public sealed class SearchQuery
     public bool IncludeDirectories { get; set; } = true;
 
     /// <summary>
+    /// Which kinds of file count, when files count at all. Not part of <see cref="Compile"/>: the
+    /// engine has no notion of a file type, so this is applied by <see cref="SearchEngine"/> as
+    /// records arrive.
+    /// </summary>
+    public FileKindFilter FileTypes { get; set; } = FileKindFilter.Everything;
+
+    /// <summary>
     /// Whether a dot, an underscore or a hyphen typed in the file name counts as a gap between
     /// words rather than as a character that has to be there.
     ///
@@ -618,10 +649,15 @@ public sealed class SearchQuery
         try { q.method_27(); }
         catch (Exception ex) { problems.Size = Explain(ex); }
 
-        if (!IncludeFiles && !IncludeDirectories)
+        // A file type filter with every bucket off excludes files just as thoroughly as the Files
+        // switch does, so it has to be counted the same way — otherwise the one state that can
+        // only ever find nothing is reported as a search that found nothing.
+        bool noTypes = IncludeFiles && (FileTypes?.MatchesNothing ?? false);
+        if ((!IncludeFiles || noTypes) && !IncludeDirectories)
         {
-            // A key, resolved by whoever shows it. See the volume states above.
-            problems.Kinds = "Problem.NoKinds";
+            // A key, resolved by whoever shows it. See the volume states above. Which of the two
+            // it is decides what the user has to change to fix it, so they are separate messages.
+            problems.Kinds = noTypes ? "Problem.NoTypes" : "Problem.NoKinds";
         }
         return problems;
     }
