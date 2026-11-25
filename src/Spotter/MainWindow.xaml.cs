@@ -411,7 +411,10 @@ public partial class MainWindow
         FilesToggle.IsChecked = !rememberFilters || _settings.IncludeFiles;
         FoldersToggle.IsChecked = !rememberFilters || _settings.IncludeFolders;
 
-        _sortColumn = _settings.SortColumn;
+        // Never left empty — see UiSettings.SortColumn. A settings file from 2.1.0 or earlier
+        // has no value for it at all, which deserializes to the default rather than to null, so
+        // upgrading lands on Name by name rather than by accident.
+        _sortColumn = string.IsNullOrEmpty(_settings.SortColumn) ? "Name" : _settings.SortColumn;
         _sortDescending = _settings.SortDescending;
 
         ApplySearchMode();
@@ -1522,6 +1525,24 @@ public partial class MainWindow
             Comparison<GClass54> ascending = comparison;
             comparison = (a, b) => ascending(b, a);
         }
+
+        // Every ordering is made total by the full path, which no two rows share.
+        //
+        // Without it the same search run twice came back in a different order, which is what
+        // made the refresh button look broken: rows arrive from several volumes on several
+        // worker threads, so arrival order varies from run to run, and List.Sort is introsort —
+        // unstable, so rows whose keys tie come out in whatever order they happened to arrive
+        // in. Ties are not an edge case here: sorting by Type puts thousands of .dll files in
+        // one group, and a folder tree written in one operation shares a timestamp to the
+        // second. The visible effect is a list that reshuffles under a sort the user has not
+        // touched. The tiebreaker is always ascending, including under a descending sort: it is
+        // not part of what was asked for, it is only there to make the answer one answer.
+        Comparison<GClass54> ordered = comparison;
+        comparison = (a, b) =>
+        {
+            int byColumn = ordered(a, b);
+            return byColumn != 0 ? byColumn : GClass75.smethod_0(SafePath(a), SafePath(b));
+        };
 
         Mouse.OverrideCursor = Cursors.Wait;
         try

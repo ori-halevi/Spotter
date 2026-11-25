@@ -79,7 +79,14 @@ public sealed class UiSettings
     /// </summary>
     public bool AutoFitColumns { get; set; } = true;
 
-    public string SortColumn { get; set; }
+    /// <summary>
+    /// The column the results are ordered by. Name rather than nothing, because "nothing" was
+    /// not an order: rows reach the grid from several volumes on several worker threads, so with
+    /// no column chosen the same search run twice came back shuffled. A list has to have an
+    /// order; this is the one it has until the user clicks a header.
+    /// </summary>
+    public string SortColumn { get; set; } = "Name";
+
     public bool SortDescending { get; set; }
 
     /// <summary>Global restore hotkey, e.g. "Ctrl+Alt+F". Blank disables it.</summary>
