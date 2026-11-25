@@ -297,8 +297,7 @@ public sealed class FileKindFilter
             {
                 foreach (string extension in _extensions)
                 {
-                    // Prefixed, because MaskOf reads a file name rather than an extension.
-                    if ((FileKinds.MaskOf("x." + extension) & _mask) == 0)
+                    if (!CoveredByKinds(extension))
                     {
                         count++;
                     }
@@ -306,6 +305,23 @@ public sealed class FileKindFilter
             }
             return count;
         }
+    }
+
+    /// <summary>
+    /// Whether the ticked buckets already let this extension through, so naming it in the box
+    /// adds nothing.
+    ///
+    /// Prefixed with a stem because <see cref="FileKinds.MaskOf"/> reads a file name rather than
+    /// an extension, and routed through the same unclaimed-means-Other rule as
+    /// <see cref="Allows"/>: an extension in no bucket is covered exactly when "everything else"
+    /// is ticked, which is the case that made "Everything else" plus "bak" count as two.
+    /// </summary>
+    private bool CoveredByKinds(string extension)
+    {
+        int kinds = FileKinds.MaskOf("x." + extension);
+        return kinds == 0
+            ? (_mask & FileKinds.Bit(FileKind.Other)) != 0
+            : (_mask & kinds) != 0;
     }
 
     /// <summary>How many of the eight buckets are on.</summary>
@@ -376,6 +392,8 @@ public sealed class FileKindFilter
             : (_mask & kinds) != 0;
     }
 
+
+
     /// <summary>
     /// A one-line description for the active-options line, e.g. "Video, Audio, iso". Returns null
     /// when there is nothing to say.
@@ -400,6 +418,12 @@ public sealed class FileKindFilter
         {
             foreach (string extension in _extensions)
             {
+                // Left out when a ticked bucket already covers it, so the tooltip and the count
+                // beside it are describing the same filter.
+                if (CoveredByKinds(extension))
+                {
+                    continue;
+                }
                 if (text.Length > 0) text.Append(", ");
                 text.Append(extension);
             }

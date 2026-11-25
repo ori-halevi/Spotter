@@ -2417,6 +2417,26 @@ public partial class MainWindow
         // mouse-down that preceded this click, so a toggle reads false and opens it straight
         // back up — the button would look as though it could not close its own panel.
         FileTypesPopup.IsOpen = true;
+
+        // A popup is its own window and does not take focus by being shown, so opening it from
+        // the keyboard would otherwise leave the caret behind on the button with nothing in the
+        // panel reachable. At Loaded priority because the rows do not exist until it is laid out.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded,
+            new Action(() => AllTypesBox.Focus()));
+    }
+
+    /// <summary>
+    /// Escape closes the panel and hands focus back to the button that opened it, which is where
+    /// the user was. A popup does not do either by itself.
+    /// </summary>
+    private void OnFileTypesKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Escape)
+        {
+            FileTypesPopup.IsOpen = false;
+            FileTypesButton.Focus();
+            e.Handled = true;
+        }
     }
 
     private void OnFileTypesClosed(object sender, EventArgs e)
@@ -2707,6 +2727,14 @@ public partial class MainWindow
         _folderMatchCase = false;
         _folderRegex = false;
         _subfolders = true;
+
+        // The file types are a search option like the rest of these, and a narrowed one is the
+        // least visible of them: leaving it set after telling the user everything was reset is
+        // how a reset turns into the next unexplained empty result.
+        _typeMask = FileKinds.AllMask;
+        TypeExtensionsBox.Text = string.Empty;
+        UpdateFileTypesUi();
+
         AfterOptionChange();
     }
 
