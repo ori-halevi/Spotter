@@ -257,6 +257,8 @@ internal static class StringsEs
 
             ["Options.Searching"] = "Búsqueda",
             ["Options.SearchAsYouType"] = "Buscar mientras escribe",
+            ["Options.RememberFilters"] = "Recordar los interruptores Archivos y Carpetas",
+            ["Options.RememberFilters.Hint"] = "Desactivado: los dos empiezan encendidos en cada ejecución. Una ventana que se abre con uno apagado no encuentra nada de ese tipo, y parece que el archivo simplemente no está.",
             ["Options.SearchAsYouType.On"] = "Cada letra escrita o ajuste cambiado inicia una búsqueda nueva.",
             ["Options.SearchAsYouType.Off"] = "No se busca nada hasta que pulse Buscar o Entrar. Útil en un equipo cargado, o cuando una consulta coincide con casi todo el disco.",
 

@@ -289,6 +289,8 @@ internal static class StringsHe
 
             ["Options.Searching"] = "חיפוש",
             ["Options.SearchAsYouType"] = "חיפוש תוך כדי הקלדה",
+            ["Options.RememberFilters"] = "לזכור את המתגים \"קבצים\" ו\"תיקיות\"",
+            ["Options.RememberFilters.Hint"] = "כשכבוי: שניהם נדלקים מחדש בכל הפעלה. חלון שנפתח כשאחד מהם כבוי לא מוצא דבר מאותו סוג, ונראה כאילו הקובץ פשוט לא קיים.",
             ["Options.SearchAsYouType.On"] = "חיפוש חדש מתחיל בכל אות שמוקלדת או בכל שינוי הגדרה.",
             ["Options.SearchAsYouType.Off"] = "שום דבר לא נחפש עד ללחיצה על חיפוש או על Enter. שימושי במחשב עמוס, או כששאילתה מתאימה לרוב הדיסק.",
 

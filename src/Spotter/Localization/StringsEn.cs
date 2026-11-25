@@ -267,6 +267,8 @@ internal static class StringsEn
 
             ["Options.Searching"] = "Searching",
             ["Options.SearchAsYouType"] = "Search as you type",
+            ["Options.RememberFilters"] = "Remember the Files and Folders switches",
+            ["Options.RememberFilters.Hint"] = "Off: both start every run switched on. A window that opens with one of them off finds nothing of that kind and looks as though the file is simply not there.",
             ["Options.SearchAsYouType.On"] = "A new search starts on each letter typed or setting changed.",
             ["Options.SearchAsYouType.Off"] = "Nothing is searched until you press Search or Enter. Useful on a busy machine, or when a query matches most of the disk.",
 

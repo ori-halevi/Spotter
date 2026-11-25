@@ -1,4 +1,4 @@
-<ui:FluentWindow x:Class="Spotter.OptionsWindow"
+﻿<ui:FluentWindow x:Class="Spotter.OptionsWindow"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -48,6 +48,11 @@
                       Checked="OnLiveSearchToggled" Unchecked="OnLiveSearchToggled" />
             <TextBlock x:Name="LiveSearchHint" TextWrapping="Wrap" Opacity="0.7"
                        Margin="24,2,0,0" />
+
+            <CheckBox x:Name="RememberFiltersBox" Content="{loc:Loc Options.RememberFilters}"
+                      Margin="0,10,0,0" />
+            <TextBlock Text="{loc:Loc Options.RememberFilters.Hint}" TextWrapping="Wrap"
+                       Opacity="0.7" Margin="24,2,0,0" />
 
             <Separator Margin="0,18,0,12" />
 

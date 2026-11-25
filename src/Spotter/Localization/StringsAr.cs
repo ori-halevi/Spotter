@@ -321,6 +321,8 @@ internal static class StringsAr
 
             ["Options.Searching"] = "البحث",
             ["Options.SearchAsYouType"] = "البحث أثناء الكتابة",
+            ["Options.RememberFilters"] = "تذكّر مفتاحَي «الملفات» و«المجلدات»",
+            ["Options.RememberFilters.Hint"] = "عند الإيقاف: يبدأ المفتاحان مُشغَّلين في كل تشغيل. النافذة التي تُفتح وأحدهما مُطفأ لا تجد شيئًا من ذلك النوع، فتبدو كأن الملف غير موجود أصلًا.",
             ["Options.SearchAsYouType.On"] = "يبدأ بحث جديد مع كل حرف تكتبه ومع كل تغيير في الإعدادات.",
             ["Options.SearchAsYouType.Off"] = "لا يُجرى أي بحث حتى تضغط «بحث» أو Enter. مفيد على جهاز مشغول، أو عندما يطابق الاستعلام معظم القرص.",
 

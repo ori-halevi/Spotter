@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -33,6 +33,7 @@ public partial class OptionsWindow
 
         LiveSearchBox.IsChecked = settings.SearchAsYouType;
         UpdateLiveSearchHint();
+        RememberFiltersBox.IsChecked = settings.RememberFileFolderFilters;
 
         ShowTrayBox.IsChecked = settings.ShowTrayIcon;
         MinimizeTrayBox.IsChecked = settings.MinimizeToTray;
@@ -503,6 +504,7 @@ public partial class OptionsWindow
         _settings.Language = (LanguageBox.SelectedItem as LanguageChoice)?.Code ?? string.Empty;
 
         _settings.SearchAsYouType = LiveSearchBox.IsChecked == true;
+        _settings.RememberFileFolderFilters = RememberFiltersBox.IsChecked == true;
         _settings.RestoreHotkey = Describe(_modifiers, _key);
         _settings.ShowTrayIcon = ShowTrayBox.IsChecked == true;
         _settings.MinimizeToTray = MinimizeTrayBox.IsChecked == true;

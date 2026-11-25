@@ -257,6 +257,8 @@ internal static class StringsDe
 
             ["Options.Searching"] = "Suche",
             ["Options.SearchAsYouType"] = "Suchen während der Eingabe",
+            ["Options.RememberFilters"] = "Die Schalter „Dateien“ und „Ordner“ merken",
+            ["Options.RememberFilters.Hint"] = "Aus: beide sind bei jedem Start eingeschaltet. Ein Fenster, das mit einem ausgeschalteten Schalter öffnet, findet davon nichts — und sieht aus, als wäre die Datei einfach nicht da.",
             ["Options.SearchAsYouType.On"] = "Jeder getippte Buchstabe und jede geänderte Einstellung startet eine neue Suche.",
             ["Options.SearchAsYouType.Off"] = "Es wird nichts gesucht, bis Sie Suchen oder Enter drücken. Nützlich auf einem ausgelasteten Rechner oder wenn eine Suche fast die ganze Platte trifft.",
 

@@ -403,8 +403,13 @@ public partial class MainWindow
         _subfolders = _settings.Subfolders;
         DescribeActiveOptions();
 
-        FilesToggle.IsChecked = _settings.IncludeFiles;
-        FoldersToggle.IsChecked = _settings.IncludeFolders;
+        // Both on unless the user asked for these two to be remembered — see
+        // UiSettings.RememberFileFolderFilters for why they are the one pair that defaults to
+        // forgetting. The stored values are still written on exit, so switching the option on
+        // carries on from what was last on screen.
+        bool rememberFilters = _settings.RememberFileFolderFilters;
+        FilesToggle.IsChecked = !rememberFilters || _settings.IncludeFiles;
+        FoldersToggle.IsChecked = !rememberFilters || _settings.IncludeFolders;
 
         _sortColumn = _settings.SortColumn;
         _sortDescending = _settings.SortDescending;
@@ -479,7 +484,6 @@ public partial class MainWindow
         FilenameBox.Focus();
         UpdateRefreshButton();      // a query restored from the last session counts as one to re-run
         ApplyInstanceTitle();
-
         if (TryStartDemoMode())
         {
             return;

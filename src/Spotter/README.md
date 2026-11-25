@@ -403,6 +403,14 @@ Also working: tray icon with minimize-to-tray and optional close-to-tray, a glob
 (`Ctrl+Alt+F` by default — press it again to dismiss), all seven columns, and persisted window
 geometry, column widths, sort and search options.
 
+The Files and Folders switches are the one exception to that last point: both start every run
+switched on, because of how they fail. A window that opens with Folders still off finds no folder
+whatever is typed, and nothing says so — it looks exactly like the thing not being there, which is
+the question the search was asked to answer. Narrowing to one kind is nearly always about the
+search in hand. "Remember the Files and Folders switches" in Options restores the old behaviour,
+and the two values are written on exit either way, so turning it on carries on from what was last
+on screen.
+
 The hotkey uses `RegisterHotKey`, not the machine-wide low-level keyboard hook the 1.5.1 app
 installed. The hook sees every keystroke on the system and filters them itself; this asks Windows
 for one combination and nothing else. If the combination is already taken the status bar says so

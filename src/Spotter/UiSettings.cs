@@ -134,6 +134,21 @@ public sealed class UiSettings
     public bool IncludeFolders { get; set; } = true;
 
     /// <summary>
+    /// Whether the Files and Folders switches come back as they were left, or start every run
+    /// with both on.
+    ///
+    /// Off by default, unlike every other search option here, because of how the two fail. A
+    /// window that opens with Folders still switched off is a window in which half of what is
+    /// searched for cannot be found — and it does not look broken, it looks like the file is not
+    /// there, which is exactly what the user was trying to find out. Narrowing to one kind is
+    /// nearly always about the search in hand rather than a standing preference.
+    ///
+    /// The two values above are still written on every exit either way, so turning this on starts
+    /// from what was last on screen rather than from a stale pair.
+    /// </summary>
+    public bool RememberFileFolderFilters { get; set; }
+
+    /// <summary>
     /// The 1.5.1 "Search On-Demand" option, under the name its tooltip actually described:
     /// "auto-start new search on each letter typed". Off means nothing runs until Search is
     /// pressed.
