@@ -2391,12 +2391,11 @@ public partial class MainWindow
             : on == 0 ? (bool?)false
             : null;                     // indeterminate: some on, some off
 
-        // The count stands for how many kinds of file can come back, which is the categories plus
-        // each custom extension — never zero while something is still allowed through.
-        int allowed = on + filter.ExtensionCount;
+        // Never zero while something is still allowed through — see FileKindFilter.LabelCount
+        // for what it counts and what it refuses to count twice.
         FilesToggle.Content = filter.IsEverything
             ? Lang.Tr("Toolbar.Files")
-            : Lang.Tr("Toolbar.Files") + " (" + allowed + ")";
+            : Lang.Tr("Toolbar.Files") + " (" + filter.LabelCount + ")";
 
         string selection = filter.Describe(Lang.Tr);
         FileTypesButton.ToolTip = selection == null
@@ -2414,7 +2413,10 @@ public partial class MainWindow
 
     private void OnFileTypes(object sender, RoutedEventArgs e)
     {
-        FileTypesPopup.IsOpen = !FileTypesPopup.IsOpen;
+        // Assigned, not toggled. A StaysOpen="False" popup has already closed itself on the
+        // mouse-down that preceded this click, so a toggle reads false and opens it straight
+        // back up — the button would look as though it could not close its own panel.
+        FileTypesPopup.IsOpen = true;
     }
 
     private void OnFileTypesClosed(object sender, EventArgs e)
@@ -2439,10 +2441,14 @@ public partial class MainWindow
 
     private void OnAllTypesClicked(object sender, RoutedEventArgs e)
     {
-        // A click on an indeterminate "all" turns everything on. Clearing it from there would
-        // mean two clicks to reach the state the user can already see is nearly reached, and
-        // "all" asked for from a partial selection has only one sensible reading.
-        _typeMask = AllTypesBox.IsChecked == true ? FileKinds.AllMask : 0;
+        // Read from the mask, not from the box that was just clicked. ToggleButton.OnToggle maps
+        // an indeterminate state to *false* whatever IsThreeState says — so the box reports
+        // "unticked" for a click the user made on a partially ticked row, and reading it would
+        // clear every bucket at the moment they asked for all of them.
+        //
+        // Which is also the rule: a click on a partial "all" turns everything on. Clearing from
+        // there would mean two clicks to reach the state they can see is nearly reached.
+        _typeMask = _typeMask == FileKinds.AllMask ? 0 : FileKinds.AllMask;
         UpdateFileTypesUi();
         OnQueryChanged(sender, e);
     }

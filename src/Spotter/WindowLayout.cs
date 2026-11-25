@@ -212,7 +212,7 @@ internal static class WindowLayout
         // One title bar: enough that the window underneath is visible and clickable, little
         // enough that the two still overlap, which is what says they are the same program. It
         // follows the interface scale because the title bar it is measured in does.
-        double step = 34 * UiScale.Current;
+        double step = 32 * UiScale.Current;
 
         for (int n = index; n > 0; n--)
         {

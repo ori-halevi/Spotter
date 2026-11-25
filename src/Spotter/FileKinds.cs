@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -41,12 +41,11 @@ public enum FileKind
 /// The lookup runs once per record arriving from the engine — millions of times on a whole-disk
 /// search — so it has to be one hash probe and an integer AND, not a walk over eight collections.
 ///
-/// And a mask rather than one kind per extension because some extensions genuinely belong to two
-/// worlds: <c>.ts</c> is TypeScript and an MPEG transport stream, <c>.img</c> is a disk image and a
-/// raw dump, <c>.key</c> is a Keynote deck and a key file, <c>.a</c> and <c>.s</c> are a static
-/// library and assembly source. Forcing each into one bucket means picking which half of the users
-/// get a filter that hides what they are looking for, and the only honest answer is that it is in
-/// both.
+/// And a mask rather than one kind per extension because an extension can genuinely belong to two
+/// worlds. <c>.ts</c> and <c>.mts</c> are the ones that do here: TypeScript sources and MPEG
+/// transport streams, and both are listed under video and under code. Forcing such an extension
+/// into one bucket means picking which half of the users get a filter that hides exactly what they
+/// are looking for, and the only honest answer is that it is in both.
 /// </summary>
 public static class FileKinds
 {
@@ -101,7 +100,12 @@ public static class FileKinds
             + "sh bash zsh fish ps1 psm1 psd1 bat cmd awk sed "
             + "sql ddl prisma graphql gql proto thrift "
             + "asm s inc pas pp dpr ada f90 f95 for cob cbl lisp el clj cljs erl ex exs hs "
-            + "gradle cmake mk makefile dockerfile tf tfvars patch diff resx csproj sln vcxproj");
+            + "gradle cmake mk tf tfvars patch diff resx csproj sln vcxproj");
+
+        // Not listed: "makefile" and "dockerfile". They are whole file names rather than
+        // extensions, so MaskOf — which reads what follows the last dot — can never match them,
+        // and listing them would put two entries in the Code tooltip that the filter does not
+        // honour.
 
         Add(map, FileKind.Program,
             "exe msi msix msixbundle appx appxbundle msp mst com scr cpl ocx "
@@ -248,32 +252,63 @@ public sealed class FileKindFilter
     private readonly int _mask;
     private readonly HashSet<string> _extensions;    // null = no extra bucket
 
+    /// <summary>
+    /// The custom extensions that contain a dot of their own — "tar.gz". They cannot be found by
+    /// the single hash probe the rest use, which reads the last segment only and would compare
+    /// "tar.gz" against "gz", so they are kept apart and matched by suffix. Almost always empty,
+    /// and the common path never looks at them.
+    /// </summary>
+    private readonly string[] _compound;
+
     public FileKindFilter(int mask, HashSet<string> extensions)
     {
         _mask = mask & FileKinds.AllMask;
         _extensions = extensions != null && extensions.Count > 0 ? extensions : null;
-    }
 
-    public static FileKindFilter FromKinds(IEnumerable<FileKind> kinds, HashSet<string> extensions)
-    {
-        int mask = 0;
-        if (kinds != null)
+        if (_extensions != null)
         {
-            foreach (FileKind kind in kinds)
+            List<string> compound = null;
+            foreach (string extension in _extensions)
             {
-                mask |= FileKinds.Bit(kind);
+                if (extension.IndexOf('.') >= 0)
+                {
+                    (compound ??= new List<string>()).Add("." + extension);
+                }
             }
+            _compound = compound?.ToArray();
         }
-        return new FileKindFilter(mask, extensions);
     }
 
     public bool Has(FileKind kind) => (_mask & FileKinds.Bit(kind)) != 0;
 
-    public string ExtensionText => _extensions == null ? string.Empty : string.Join(", ", _extensions);
+    /// <summary>
+    /// How many distinct kinds of file this filter lets through — the number on the Files label.
+    ///
+    /// A custom extension that one of the ticked buckets already covers is not counted. Video
+    /// plus "mkv" typed in the box is one kind of file, not two, and a label reading "Files (2)"
+    /// for it would be describing a filter nobody asked for.
+    /// </summary>
+    public int LabelCount
+    {
+        get
+        {
+            int count = KindCount;
+            if (_extensions != null)
+            {
+                foreach (string extension in _extensions)
+                {
+                    // Prefixed, because MaskOf reads a file name rather than an extension.
+                    if ((FileKinds.MaskOf("x." + extension) & _mask) == 0)
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+    }
 
-    public int ExtensionCount => _extensions?.Count ?? 0;
-
-    /// <summary>How many of the eight buckets are on. Only meaningful for the label.</summary>
+    /// <summary>How many of the eight buckets are on.</summary>
     public int KindCount
     {
         get
@@ -321,6 +356,17 @@ public sealed class FileKindFilter
             if (dot > 0 && dot < name.Length - 1 && _extensions.Contains(name.Substring(dot + 1)))
             {
                 return true;
+            }
+
+            if (_compound != null)
+            {
+                foreach (string suffix in _compound)
+                {
+                    if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
             }
         }
 

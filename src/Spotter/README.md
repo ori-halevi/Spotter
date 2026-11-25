@@ -438,9 +438,10 @@ sort, the export and the folder totals all read the published rows, so a row fil
 would have been counted, sorted and exported first.
 
 **An extension can be in two buckets**, so `FileKinds` maps each extension to a *mask* rather than
-to one kind. `.ts` is TypeScript and an MPEG transport stream, `.img` is a disk image and a raw
-dump, `.a` and `.s` are a static library and assembly source. Forcing each into one bucket means
-choosing which half of the users get a filter that hides what they are looking for.
+to one kind. `.ts` and `.mts` are the pair that need it here — TypeScript sources and MPEG
+transport streams — and both are listed under video and under code. Forcing such an extension into
+one bucket means choosing which half of the users get a filter that hides what they are looking
+for.
 
 **"Everything else" is a bucket, not a leftover.** Without it, ticking all seven real categories
 would still drop files whose extension nobody listed, and the label would say nothing was filtered
