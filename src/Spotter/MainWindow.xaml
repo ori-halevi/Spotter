@@ -327,7 +327,11 @@
              itself to Windows as the system-menu button, so that one click opens the system menu
              and two close the window. See "the system-menu icon" in MainWindow.xaml.cs for why
              that cannot be a mouse handler here. -->
-        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="Spotter">
+        <!-- 34 rather than the theme's 48. A title bar holds a name and three buttons, and
+             Windows itself draws that in 32; the 16 pixels above the search fields were the
+             single largest piece of nothing in the window. The caption buttons are 32 tall and
+             still fit. -->
+        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="Spotter" Height="34">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon x:Name="TitleIcon"
                               Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
@@ -335,7 +339,9 @@
         </ui:TitleBar>
 
         <!-- Query -->
-        <Grid Grid.Row="1" Margin="16,4,16,8">
+        <!-- No top margin: the title bar above already ends in its own space, and the two
+             together read as a gap rather than as a margin. -->
+        <Grid Grid.Row="1" Margin="16,0,16,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="12" />
