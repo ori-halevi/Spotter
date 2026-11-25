@@ -309,6 +309,50 @@
              why they measured 17 px against a 28 px field until it was set here. -->
         <Thickness x:Key="QueryFieldPadding" Left="10" Top="3" Right="10" Bottom="3" />
 
+        <!-- A caption button, drawn to match the three the theme provides.
+             
+             Neither stock control does. A ui:Button is a toolbar button: rounded corners, its
+             own padding, and a pill-shaped highlight that beside three square ones reads as a
+             mistake. A ui:TitleBarButton is the right control but draws its glyph from its
+             ButtonType, and the only type with no window command behind it — Unknown — has no
+             glyph either, so it came out invisible.
+             
+             Hence the template, and its numbers are measured off the real buttons rather than
+             guessed: 44 x 30, anchored to the TOP of the bar, which is where Windows 11 puts
+             caption buttons and where this theme puts these. A button of the bar's full height,
+             centred, sat its glyph 1.6 px below the other three — the kind of difference that
+             is invisible to describe and obvious to look at. Square, and the theme's own two
+             subtle fills for hover and pressed, which are the brushes the real ones use. -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Fill" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Fill" Property="Background"
+                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Fill" Property="Background"
+                                        Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </ui:FluentWindow.Resources>
 
     <!-- Everything in the window hangs off this one element, which is what makes a single
@@ -327,15 +371,31 @@
              itself to Windows as the system-menu button, so that one click opens the system menu
              and two close the window. See "the system-menu icon" in MainWindow.xaml.cs for why
              that cannot be a mouse handler here. -->
-        <!-- 34 rather than the theme's 48. A title bar holds a name and three buttons, and
+        <!-- 32 rather than the theme's 48. A title bar holds a name and three buttons, and
              Windows itself draws that in 32; the 16 pixels above the search fields were the
-             single largest piece of nothing in the window. The caption buttons are 32 tall and
-             still fit. -->
-        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="Spotter" Height="34">
+             single largest piece of nothing in the window. 32 is also where the bar stops
+             leaving a dead strip beneath the caption buttons, which are 30 tall and anchored
+             to its top. -->
+        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="Spotter" Height="32">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon x:Name="TitleIcon"
                               Source="pack://application:,,,/spotter.ico" Width="16" Height="16" />
             </ui:TitleBar.Icon>
+            <!-- A second window, next to minimize and close. TrailingContent is the slot just
+                 inside the caption buttons, so it mirrors with them: left of them in English,
+                 right of them in Hebrew, without being told.
+
+                 Drawn as a caption button rather than as a toolbar button — transparent, no
+                 border, full height of the bar — because that is what it sits among, and it is
+                 not focusable for the same reason the real ones are not. The taskbar's own
+                 gesture for this cannot be answered (see App.ShiftHeldAtLaunch), so the window
+                 offers it where a window can. -->
+            <ui:TitleBar.TrailingContent>
+                <Button Style="{StaticResource CaptionButton}" Click="OnNewInstance"
+                        ToolTip="{loc:Loc NewInstance.Tip}">
+                    <ui:SymbolIcon Symbol="Add24" FontSize="14" />
+                </Button>
+            </ui:TitleBar.TrailingContent>
         </ui:TitleBar>
 
         <!-- Query -->
@@ -343,11 +403,16 @@
              together read as a gap rather than as a margin. -->
         <Grid Grid.Row="1" Margin="16,0,16,8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" />
+                <!-- The name field gives a quarter of its width to the size field. Shares are
+                     not what the fields look like: each column also carries its buttons at a
+                     fixed width, and the size field pays for its presets button out of the
+                     smallest column, which left its placeholder — an example of the grammar,
+                     and the only documentation of it on screen — cut off mid-word. -->
+                <ColumnDefinition Width="1.5*" />
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="1.4*" />
                 <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="0.9*" />
+                <ColumnDefinition Width="1.4*" />
             </Grid.ColumnDefinitions>
 
             <DockPanel Grid.Column="0">

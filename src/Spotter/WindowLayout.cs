@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 
 namespace Spotter;
@@ -177,15 +177,53 @@ internal static class WindowLayout
             bounds = Default(Displays.Primary, UiScale.Current);
         }
 
+        // An extra instance restores the same remembered arrangement as the first one, which
+        // means it opens exactly on top of it and hides it completely — and the whole point of a
+        // second window is to see it beside the first.
+        if (App.SecondaryInstance)
+        {
+            bounds = Cascade(bounds, App.OtherInstanceCount());
+        }
+
         window.Left = bounds.Left;
         window.Top = bounds.Top;
         window.Width = bounds.Width;
         window.Height = bounds.Height;
 
-        if (settings.RememberPlacement && settings.Maximized)
+        // Maximized is remembered for the window that owns the settings. An extra window that
+        // came up maximized would cover the first one whatever the cascade did.
+        if (settings.RememberPlacement && settings.Maximized && !App.SecondaryInstance)
         {
             window.WindowState = WindowState.Maximized;
         }
+    }
+
+    /// <summary>
+    /// Steps a window down and across from the one before it, the way Windows has cascaded new
+    /// windows since it had any.
+    ///
+    /// The full offset is tried first and then shorter ones, so a window near the bottom-right
+    /// corner stacks less far instead of walking off the screen — <see cref="IsUsable"/> is the
+    /// same test the remembered position has to pass, so a cascaded window is always one that
+    /// can be grabbed and dragged.
+    /// </summary>
+    private static Rect Cascade(Rect bounds, int index)
+    {
+        // One title bar: enough that the window underneath is visible and clickable, little
+        // enough that the two still overlap, which is what says they are the same program. It
+        // follows the interface scale because the title bar it is measured in does.
+        double step = 34 * UiScale.Current;
+
+        for (int n = index; n > 0; n--)
+        {
+            Rect moved = new Rect(bounds.Left + n * step, bounds.Top + n * step,
+                                  bounds.Width, bounds.Height);
+            if (IsUsable(moved))
+            {
+                return moved;
+            }
+        }
+        return bounds;
     }
 
     /// <summary>

@@ -233,7 +233,7 @@ internal static class StringsRu
             ["Dialog.AlreadyRunning"] = "Spotter уже запущен, но этой копии не удалось вывести его окно на передний план.\n\nВозможно, он принадлежит другой учётной записи или ещё запускается.",
             ["Menu.NewInstance"] = "Новый экземпляр",
             ["Tray.NewInstance"] = "Новый экземпляр",
-            ["Jump.NewInstance.Tip"] = "Открыть второе окно Spotter с собственным поиском.",
+            ["NewInstance.Tip"] = "Открыть второе окно Spotter с собственным поиском.",
             ["Window.ExtraInstance"] = "Spotter — дополнительный экземпляр",
             ["Dialog.NewInstanceFailed"] = "Не удалось запустить ещё один экземпляр. Причина записана в файл журнала.",
             ["Dialog.Export.Filter"] = "Файл CSV (*.csv)|*.csv|Текстовый файл (*.txt)|*.txt",

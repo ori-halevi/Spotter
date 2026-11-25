@@ -211,7 +211,7 @@ public partial class App : Application
             list.JumpItems.Add(new System.Windows.Shell.JumpTask
             {
                 Title = Localization.Lang.Tr("Menu.NewInstance"),
-                Description = Localization.Lang.Tr("Jump.NewInstance.Tip"),
+                Description = Localization.Lang.Tr("NewInstance.Tip"),
                 ApplicationPath = path,
                 IconResourcePath = path,
                 Arguments = NewInstanceFlag,
@@ -286,6 +286,41 @@ public partial class App : Application
             // window explains what is missing and offers the button again.
             Log.Write("elevation declined or failed: " + ex.Message);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// How many other copies of Spotter are running. Used to cascade an extra window clear of
+    /// the ones already on screen, so the count only has to be about right: one too few means
+    /// two windows share a position, which the user then drags apart, and the alternative — a
+    /// handshake between instances to hand out positions — is a great deal of machinery for a
+    /// window that is about to be moved anyway.
+    /// </summary>
+    internal static int OtherInstanceCount()
+    {
+        try
+        {
+            using Process self = Process.GetCurrentProcess();
+            Process[] all = Process.GetProcessesByName(self.ProcessName);
+            try
+            {
+                return Math.Max(0, all.Length - 1);
+            }
+            finally
+            {
+                foreach (Process p in all)
+                {
+                    p.Dispose();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Enumerating processes can fail outright on a locked-down machine. One step down is
+            // the right guess: this is only ever called by an instance that already knows
+            // another one is running.
+            Log.Write("could not count the running instances: " + ex.Message);
+            return 1;
         }
     }
 
