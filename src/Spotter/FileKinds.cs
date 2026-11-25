@@ -40,6 +40,9 @@ public enum FileKind
 ///
 /// The lookup runs once per record arriving from the engine — millions of times on a whole-disk
 /// search — so it has to be one hash probe and an integer AND, not a walk over eight collections.
+/// It is not allocation-free: the probe needs the extension as a string, and net8.0 has no
+/// span-keyed dictionary lookup (that arrives with .NET 9). The substring is short-lived and
+/// never escapes, so the cost is gen0 churn rather than anything that accumulates.
 ///
 /// And a mask rather than one kind per extension because an extension can genuinely belong to two
 /// worlds. <c>.ts</c> and <c>.mts</c> are the ones that do here: TypeScript sources and MPEG
@@ -465,8 +468,13 @@ public sealed class FileKindFilter
 
 
     /// <summary>
-    /// A one-line description for the active-options line, e.g. "Video, Audio, iso". Returns null
-    /// when there is nothing to say.
+    /// A one-line description of what gets through, e.g. "Video, Audio, iso", for the chevron's
+    /// tooltip. Returns null when there is nothing to say.
+    ///
+    /// Deliberately not on the active-options line beside it, which exists to show that a search
+    /// is not running on default settings: the count on the Files label is already that signal
+    /// for this filter, and spelling the same thing twice in one row is how a row stops being
+    /// read at all.
     /// </summary>
     public string Describe(Func<string, string> translate)
     {
