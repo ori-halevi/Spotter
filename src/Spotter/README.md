@@ -342,7 +342,11 @@ Three things that also mattered:
   That is why an ordinary second launch hands over to the running window rather than opening its
   own — the behaviour the tray icon and the restore hotkey both depend on.
 - More than one instance is available on request: `--new-instance`, `Ctrl+N`, "New instance" in the
-  results background menu, or the same item in the tray menu. Each one is a real second process
+  results background menu or the tray menu, a middle-click on the tray icon, shift held at launch,
+  or "New instance" on the taskbar button's jump list. Middle-clicking the taskbar button — the
+  gesture most people arrive with — cannot be answered: the shell starts the executable with no
+  arguments and the button is released long before there is a process, so it is the same launch as
+  an ordinary click. Shift is read before `TryElevate`, so the flag reaches the elevated copy. Each one is a real second process
   with its own engine and its own full index pass, which is the cost of the feature and the reason
   it is not the default. An extra instance is deliberately not the owning one: it registers no
   restore hotkey (`RegisterHotKey` gives a combination to one window only), does not listen for the
@@ -380,7 +384,8 @@ system, Mica, live search with a 180 ms debounce,
 per-field case/regex options, folder browsing, completion and drag-and-drop, size presets,
 per-field validation, a determinate indexing progress bar with per-drive detail, rate and time
 remaining, virtualized results (checked against 250,000 rows), per-extension shell icons, sorting
-using the engine's own natural-order comparers (`file2` still sorts before `file10`), open, open
+using the engine's own natural-order comparers (`file2` still sorts before `file10`, and every
+ordering is made total by the full path, so the same search twice is the same list twice), open, open
 containing folder, copy name/path/folder, CSV and plain-text export, delete to Recycle Bin and
 permanent delete with confirmation, drag-and-drop out to Explorer, properties, multi-select with
 a running size total.
