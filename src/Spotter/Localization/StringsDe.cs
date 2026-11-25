@@ -221,6 +221,7 @@ internal static class StringsDe
             ["Dialog.AlreadyRunning"] = "Spotter läuft bereits, aber diese Kopie konnte dessen Fenster nicht in den Vordergrund holen.\n\nEs kann zu einem anderen Benutzerkonto gehören oder gerade starten.",
             ["Menu.NewInstance"] = "Neue Instanz",
             ["Tray.NewInstance"] = "Neue Instanz",
+            ["Jump.NewInstance.Tip"] = "Ein zweites Spotter-Fenster mit eigener Suche öffnen.",
             ["Window.ExtraInstance"] = "Spotter — zusätzliche Instanz",
             ["Dialog.NewInstanceFailed"] = "Eine weitere Instanz konnte nicht gestartet werden. Der Grund steht in der Protokolldatei.",
             ["Dialog.Export.Filter"] = "CSV-Datei (*.csv)|*.csv|Textdatei (*.txt)|*.txt",

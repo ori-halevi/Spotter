@@ -231,6 +231,7 @@ internal static class StringsEn
             ["Dialog.AlreadyRunning"] = "Spotter is already running, but this copy could not bring its window to the front.\n\nIt may belong to another user account, or be starting up.",
             ["Menu.NewInstance"] = "New instance",
             ["Tray.NewInstance"] = "New instance",
+            ["Jump.NewInstance.Tip"] = "Open a second Spotter window with a search of its own.",
             ["Window.ExtraInstance"] = "Spotter — extra instance",
             ["Dialog.NewInstanceFailed"] = "Another instance could not be started. The log file has the reason.",
             ["Dialog.Export.Filter"] = "CSV file (*.csv)|*.csv|Text file (*.txt)|*.txt",

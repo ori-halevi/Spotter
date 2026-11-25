@@ -82,6 +82,17 @@ public sealed class TrayIcon : IDisposable
             Visible = false,
         };
         _icon.DoubleClick += (_, __) => ShowRequested?.Invoke();
+
+        // Middle-click for a new window, which is the gesture people arrive with from every
+        // other program that has more than one. The taskbar button cannot answer it — the shell
+        // launches the exe with nothing to say which button was used — so the tray icon does.
+        _icon.MouseUp += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Middle)
+            {
+                NewInstanceRequested?.Invoke();
+            }
+        };
     }
 
     /// <summary>

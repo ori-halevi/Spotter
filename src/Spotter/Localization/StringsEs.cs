@@ -221,6 +221,7 @@ internal static class StringsEs
             ["Dialog.AlreadyRunning"] = "Spotter ya se está ejecutando, pero esta copia no ha podido traer su ventana al frente.\n\nPuede pertenecer a otra cuenta de usuario, o estar iniciándose.",
             ["Menu.NewInstance"] = "Nueva instancia",
             ["Tray.NewInstance"] = "Nueva instancia",
+            ["Jump.NewInstance.Tip"] = "Abrir una segunda ventana de Spotter con su propia búsqueda.",
             ["Window.ExtraInstance"] = "Spotter — instancia adicional",
             ["Dialog.NewInstanceFailed"] = "No se ha podido iniciar otra instancia. El motivo está en el archivo de registro.",
             ["Dialog.Export.Filter"] = "Archivo CSV (*.csv)|*.csv|Archivo de texto (*.txt)|*.txt",

@@ -253,6 +253,7 @@ internal static class StringsHe
             ["Dialog.AlreadyRunning"] = "Spotter כבר פועל, אבל העותק הזה לא הצליח להביא את החלון שלו לחזית.\n\nייתכן שהוא שייך לחשבון משתמש אחר, או שהוא בעיצומה של עלייה.",
             ["Menu.NewInstance"] = "מופע חדש",
             ["Tray.NewInstance"] = "מופע חדש",
+            ["Jump.NewInstance.Tip"] = "פתיחת חלון Spotter שני, עם חיפוש משלו.",
             ["Window.ExtraInstance"] = "Spotter — מופע נוסף",
             ["Dialog.NewInstanceFailed"] = "לא היה אפשר להפעיל מופע נוסף. הסיבה רשומה בקובץ היומן.",
             ["Dialog.Export.Filter"] = "קובץ CSV (*.csv)|*.csv|קובץ טקסט (*.txt)|*.txt",

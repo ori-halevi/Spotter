@@ -23,6 +23,20 @@ public partial class App : Application
     [DllImport("user32.dll")]
     private static extern bool AllowSetForegroundWindow(int dwProcessId);
 
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
+
+    private const int VK_SHIFT = 0x10;
+
+    /// <summary>
+    /// Shift held while the app is launched, which Windows itself treats as "a new window of
+    /// this program" — shift-clicking a taskbar button is the shell's own gesture for it, and so
+    /// is middle-clicking one. The middle click cannot be seen from here: the shell starts the
+    /// executable with no arguments and the button is long released by the time a process
+    /// exists, so a plain launch is a plain launch. Shift is still held, and can be.
+    /// </summary>
+    private static bool ShiftHeldAtLaunch() => (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+
     /// <summary>ASFW_ANY — any process may take the foreground from us.</summary>
     private const int ASFW_ANY = -1;
 
@@ -71,6 +85,17 @@ public partial class App : Application
         base.OnStartup(e);
 
         string[] args = _launchArgs = e?.Args ?? Array.Empty<string>();
+
+        // Before TryElevate, so that the flag is part of the command line the elevated copy is
+        // started with: by then the key is no longer held and the intent would be lost.
+        if (ShiftHeldAtLaunch() && !HasFlag(args, NewInstanceFlag))
+        {
+            string[] withFlag = new string[args.Length + 1];
+            Array.Copy(args, withFlag, args.Length);
+            withFlag[args.Length] = NewInstanceFlag;
+            args = _launchArgs = withFlag;
+            Log.Write("shift held at launch: taken as --new-instance");
+        }
 
         // Results arrive on engine worker threads, so a throw there kills the process with
         // nothing but a Windows Error Reporting entry and an exception code. Log it instead.
@@ -153,6 +178,51 @@ public partial class App : Application
         // After the theme, and deliberately not via a Style — a tooltip is its own window and does
         // not inherit the reading direction, but restyling it to fix that loses the Fluent look.
         PopupChrome.Install();
+
+        InstallJumpList();
+    }
+
+    /// <summary>
+    /// Puts "New instance" on the taskbar button's right-click menu, which is where Windows
+    /// itself puts that command for every program that has one.
+    ///
+    /// It is a task rather than anything this process handles: the shell starts the executable
+    /// again with the argument, exactly as a shortcut would, and the normal startup path turns
+    /// that into a second window. Registered per launch rather than once, because the list is
+    /// keyed to the executable's path and this one is meant to be moved around.
+    /// </summary>
+    private static void InstallJumpList()
+    {
+        try
+        {
+            string path = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            System.Windows.Shell.JumpList list = new System.Windows.Shell.JumpList
+            {
+                // Neither is ours to show: Spotter opens no documents, so the shell's recent and
+                // frequent lists would be empty categories taking up the menu.
+                ShowRecentCategory = false,
+                ShowFrequentCategory = false,
+            };
+            list.JumpItems.Add(new System.Windows.Shell.JumpTask
+            {
+                Title = Localization.Lang.Tr("Menu.NewInstance"),
+                Description = Localization.Lang.Tr("Jump.NewInstance.Tip"),
+                ApplicationPath = path,
+                IconResourcePath = path,
+                Arguments = NewInstanceFlag,
+            });
+            System.Windows.Shell.JumpList.SetJumpList(Current, list);
+        }
+        catch (Exception ex)
+        {
+            // A jump list is a convenience; nothing about the app depends on one existing.
+            Log.Write("could not install the jump list: " + ex.Message);
+        }
     }
 
     /// <summary>Maps the stored setting onto a concrete theme, following Windows when set to Auto.</summary>

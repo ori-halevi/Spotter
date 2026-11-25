@@ -283,6 +283,7 @@ internal static class StringsAr
             ["Dialog.AlreadyRunning"] = "‏Spotter قيد التشغيل بالفعل، لكن هذه النسخة لم تتمكن من إظهار نافذته في المقدمة.\n\nقد يكون تابعًا لحساب مستخدم آخر، أو لا يزال في طور البدء.",
             ["Menu.NewInstance"] = "نسخة جديدة",
             ["Tray.NewInstance"] = "نسخة جديدة",
+            ["Jump.NewInstance.Tip"] = "فتح نافذة ثانية من Spotter ببحث خاص بها.",
             ["Window.ExtraInstance"] = "‏Spotter — نسخة إضافية",
             ["Dialog.NewInstanceFailed"] = "لم يتمكّن البرنامج من تشغيل نسخة أخرى. السبب مُدوَّن في ملف السجل.",
             ["Dialog.Export.Filter"] = "ملف CSV (*.csv)|*.csv|ملف نصي (*.txt)|*.txt",
