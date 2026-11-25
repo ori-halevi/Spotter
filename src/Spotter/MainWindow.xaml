@@ -291,6 +291,24 @@
                        TextAlignment="{loc:LangProp StartAlignment}" />
         </DataTemplate>
 
+        <!-- How tall the three query boxes are. The theme's own padding is drawn for a dialog
+             field that is read once; these three are the window's working surface, sit directly
+             above the results, and every vertical pixel they give back is a row of results.
+
+             One value in one place because the three have to agree to the pixel — they share a
+             row, and the buttons beside them have no height of their own: a DockPanel stretches a
+             docked child to the panel's height, so the boxes set the height of the row and
+             everything in it follows. Changing this number is therefore the whole adjustment.
+
+             X is deliberately the theme's own 10: the caret should not sit against the border,
+             and the field's icon needs room. Y is the axis with slack in it.
+
+             Every button in the row therefore carries VerticalAlignment="Stretch" instead of a
+             height of its own. A DockPanel does stretch a docked child, but the button style
+             centres it, and a style's alignment only loses to one set on the element — which is
+             why they measured 17 px against a 28 px field until it was set here. -->
+        <Thickness x:Key="QueryFieldPadding" Left="10" Top="3" Right="10" Bottom="3" />
+
     </ui:FluentWindow.Resources>
 
     <!-- Everything in the window hangs off this one element, which is what makes a single
@@ -327,7 +345,7 @@
             </Grid.ColumnDefinitions>
 
             <DockPanel Grid.Column="0">
-                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" Height="34"
+                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" VerticalAlignment="Stretch"
                            Icon="{ui:SymbolIcon Options24}" Tag="NameOptionsMenu"
                            Click="OnFieldOptions"
                            ToolTip="{loc:Loc Field.Name.OptionsTip}" />
@@ -346,11 +364,13 @@
                      search returns nothing by definition (SearchQuery.IsEmpty), so there would be
                      nothing to re-run. Kept in step by UpdateRefreshButton. -->
                 <ui:Button x:Name="RefreshButton" DockPanel.Dock="Left" Margin="0,0,4,0"
-                           Padding="8,0" Height="34" IsEnabled="False"
+                           Padding="8,0" VerticalAlignment="Stretch" IsEnabled="False"
                            Icon="{ui:SymbolIcon ArrowSync24}" Focusable="False"
                            Click="OnSearchAgain"
                            ToolTip="{loc:Loc Field.Name.RefreshTip}" />
             <ui:TextBox x:Name="FilenameBox"
+                        Padding="{StaticResource QueryFieldPadding}"
+                        MinHeight="0"
                         PlaceholderText="{loc:Loc Field.Name.Placeholder}"
                         Icon="{ui:SymbolIcon Search24}"
                         ClearButtonEnabled="True"
@@ -376,14 +396,16 @@
             </DockPanel>
 
             <DockPanel Grid.Column="2">
-                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" Height="34"
+                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" VerticalAlignment="Stretch"
                            Icon="{ui:SymbolIcon FolderOpen24}" Click="OnBrowseFolder"
                            ToolTip="{loc:Loc Field.Folder.BrowseTip}" />
-                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" Height="34"
+                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" VerticalAlignment="Stretch"
                            Icon="{ui:SymbolIcon Options24}" Tag="FolderOptionsMenu"
                            Click="OnFieldOptions"
                            ToolTip="{loc:Loc Field.Folder.OptionsTip}" />
             <ui:TextBox x:Name="DirectoryBox"
+                        Padding="{StaticResource QueryFieldPadding}"
+                        MinHeight="0"
                         PlaceholderText="{loc:Loc Field.Folder.Placeholder}"
                         Icon="{ui:SymbolIcon Folder24}"
                         ClearButtonEnabled="True"
@@ -408,7 +430,7 @@
             </DockPanel>
 
             <DockPanel Grid.Column="4">
-                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" Height="34"
+                <ui:Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,0" VerticalAlignment="Stretch"
                            Icon="{ui:SymbolIcon ChevronDown24}" Tag="SizePresetMenu"
                            Click="OnFieldOptions"
                            ToolTip="{loc:Loc Field.Size.PresetsTip}" />
@@ -420,6 +442,8 @@
                  a European number counts as right-to-left when the punctuation beside it is
                  resolved. Only the base direction can, so it is set here. -->
             <ui:TextBox x:Name="SizeBox"
+                        Padding="{StaticResource QueryFieldPadding}"
+                        MinHeight="0"
                         PlaceholderText="{loc:Loc Field.Size.Placeholder}"
                         Icon="{ui:SymbolIcon Ruler24}"
                         ClearButtonEnabled="True"
