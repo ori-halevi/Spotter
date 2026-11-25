@@ -7,9 +7,11 @@ in one body.
 
 ## 🔎 Spotter 2.2.1
 
-One new thing, and a long list of corrections to 2.2.0.
+Coming from 2.1.0, this is two releases at once: **2.2.0 was never published here**, so
+everything in it arrives with this one.
 
-### New
+### New in 2.2.1
+
 
 - **Filter the results by what kind of file they are.** **Files** is now a switch with a panel
   behind it: the switch decides whether files appear at all, and the chevron beside it opens
@@ -22,6 +24,25 @@ One new thing, and a long list of corrections to 2.2.0.
   only `.iso`, untick the categories. The whole thing resets on every launch together with Files
   and Folders, under the same option in **Options → Searching**.
 
+### New in 2.2.0, published here for the first time
+
+- **A refresh button beside the search field.** An index knows every file on the machine — but it
+  cannot know about a file that has not been written yet, so waiting for one means running the
+  same search again and again. F5 always did that; now so does one button at the end of the name
+  field, which keeps the caret where it was. It greys out when there is nothing to search for.
+- **More than one window at once.** `Ctrl+N`, the **+** beside minimize and close, **New
+  instance** in the results background menu, or the same item in the tray menu, opens a second
+  Spotter with its own search. Launching the shortcut again still brings back the window you
+  already have, which is what it is for; only those four ask for a new one.
+- **Files and Folders start every run switched on.** Narrowing a search to one kind is nearly
+  always about that search, and a window that opens with Folders still off finds no folder
+  whatever you type and says nothing about it — which looks exactly like the thing not being
+  there, the one question you opened Spotter to answer. **Options → Searching** brings back the
+  old behaviour.
+- **One order for the results, not one per run.** A re-run used to come back sorted differently.
+- **The three query fields are shorter**, and so is the title bar: padding nobody asked for,
+  returned to the results.
+
 ### Fixed
 
 - **A second window no longer opens exactly on top of the first.** It steps clear by one title
@@ -32,9 +53,6 @@ One new thing, and a long list of corrections to 2.2.0.
   within a few seconds, keeping whatever the window that closed had written.
 - **Saving Options or clearing the history in a second window says so** when the settings belong
   to the other window, instead of closing the dialog as though it had worked.
-- **The refresh button no longer reshuffles the results.** Searches now have one order rather
-  than one per run.
-- **A "+" button beside minimize and close** opens a new window, and the title bar is shorter.
 - **The size field's placeholder is readable again** — the name field gives it a quarter of its
   width.
 - **Pasting a list of extensions works**, including one copied line-per-line, and anything that
@@ -44,6 +62,24 @@ One new thing, and a long list of corrections to 2.2.0.
 - **A control character pasted into a search no longer loses your settings.** One could stop
   every save for the rest of the session — window position, column widths, language, history —
   without a word.
+
+### Download
+
+Two files, same program. The only difference is whether .NET is inside the exe or expected on the
+PC already.
+
+| File | Size | Take this one if… |
+|---|---|---|
+| **`Spotter-2.2.1-win-x64-standalone.exe`** | 69 MB | **You just want it to work.** Nothing to install. |
+| `Spotter-2.2.1-win-x64-requires-dotnet8.exe` | 8 MB | You have the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0), or do not mind installing it. |
+
+Either way it is **one file**. Put it on your desktop, a USB stick, or straight into `C:\` and run
+it from there — it writes nothing next to itself. Replacing an existing 2.x exe with this one keeps
+all your settings.
+
+### Requirements
+
+Windows 10 (1809) or 11, 64-bit.
 
 ### Also
 
@@ -57,9 +93,10 @@ panel. Six languages throughout, as always.
 
 ## 🔎 ספוטר 2.2.1
 
-דבר אחד חדש, ורשימה ארוכה של תיקונים ל‑2.2.0.
+למי שמגיע מ‑2.1.0 אלה שני שחרורים באחד: **2.2.0 מעולם לא פורסם כאן**, אז כל מה שהיה בו מגיע עם זה.
 
-### חדש
+### חדש ב‑2.2.1
+
 
 - **סינון התוצאות לפי סוג הקובץ.** המתג **קבצים** הוא מעכשיו מתג עם חלונית מאחוריו: המתג קובע אם
   קבצים מופיעים בכלל, והחץ שלידו פותח שמונה סוגים — תמונות, וידאו, אודיו, מסמכים, ארכיונים, קוד
@@ -70,6 +107,20 @@ panel. Six languages throughout, as always.
   הסיומות בשדה הן תוספת ולא הגבלה על המסומנים: כדי למצוא רק `.iso` יש לבטל את סימון הסוגים. הכול
   מתאפס בכל הפעלה יחד עם קבצים ותיקיות, תחת אותה הגדרה ב**אפשרויות ← חיפוש**.
 
+### חדש ב‑2.2.0, שמתפרסם כאן לראשונה
+
+- **כפתור רענון לייד שדה החיפוש.** אינדקס יודע על כל קובץ במחשב — אבל לא יכול לדעת על קובץ שעוד
+  לא נכתב, אז המתנה לכזה פירושה להריץ שוב ושוב את אותו חיפוש. F5 תמיד עשה את זה; עכשיו גם כפתור
+  אחד בקצה שדה השם, ששומר את הסמן במקומו. הוא מאפיר כשאין מה לחפש.
+- **יותר מחלון אחד.** `Ctrl+N`, ה‑**+** לייד מזעור וסגירה, **מופע חדש** בתפריט הרקע של התוצאות,
+  או אותו פריט בתפריט המגש — כל אחד מהם פותח ספוטר נוסף עם חיפוש משלו. הפעלה חוזרת של הקיצור עדיין
+  מחזירה את החלון שכבר קיים, וזה בדיוק מה שהיא נועדה לעשות.
+- **קבצים ותיקיות נדלקים בכל הפעלה.** צמצום לסוג אחד הוא כמעט תמיד עניין של אותו חיפוש, וחלון
+  שנפתח כשתיקיות כבוי לא מוצא שום תיקייה ולא אומר על כך דבר — מה שנראה בדיוק כמו הקובץ שלא קיים,
+  השאלה היחידה שבגללה פתחת את ספוטר. **אפשרויות ← חיפוש** מחזיר את ההתנהגות הישנה.
+- **סדר אחד לתוצאות, לא סדר לכל הרצה.** הרצה חוזרת נהגה לחזור ממוינת אחרת.
+- **שלושת שדות החיפוש נמוכים יותר**, וגם שורת הכותרת: רווח שאף אחד לא ביקש, שחוזר לתוצאות.
+
 ### תוקן
 
 - **חלון שני כבר לא נפתח בדיוק מעל הראשון.** הוא מתרחק בשורת כותרת אחת, נשאר בתוך אזור העבודה,
@@ -79,8 +130,6 @@ panel. Six languages throughout, as always.
   לעבוד. עכשיו הוא לוקח את התפקיד תוך כמה שניות, ושומר את מה שהחלון שנסגר הספיק לכתוב.
 - **שמירה באפשרויות או ניקוי היסטוריה בחלון שני אומרים את זה** כשההגדרות שייכות לחלון האחר, במקום
   לסגור את הדיאלוג כאילו זה עבד.
-- **כפתור הרענון כבר לא מערבב את התוצאות.** לחיפוש יש סדר אחד, ולא סדר לכל הרצה.
-- **כפתור "+" לייד מזעור וסגירה** פותח חלון חדש, ושורת הכותרת נמוכה יותר.
 - **ה‑placeholder של שדה הגודל קריא שוב** — שדה השם נותן לו רבע מהרוחב שלו.
 - **הדבקת רשימת סיומות עובדת**, כולל כזו שהועתקה שורה‑בשורה, וכל מה שלא יכול להתאים לשם קובץ נזרק
   במקום להיספר כסינון פעיל.
@@ -88,6 +137,22 @@ panel. Six languages throughout, as always.
   והגדרות.
 - **תו בקרה שהודבק לחיפוש כבר לא מאבד את ההגדרות.** אחד כזה יכול היה לעצור כל שמירה עד סוף הריצה
   — מיקום החלון, רוחבי העמודות, השפה, ההיסטוריה — בלי מילה.
+
+### הורדה
+
+שני קבצים, אותה תוכנה. ההבדל היחיד הוא אם ‎.NET נמצא בתוך ה‑exe או מצופה להיות מותקן כבר.
+
+| קובץ | גודל | קח את זה אם… |
+|---|---|---|
+| **`Spotter-2.2.1-win-x64-standalone.exe`** | 69MB | **אתה פשוט רוצה שזה יעבוד.** אין מה להתקין. |
+| `Spotter-2.2.1-win-x64-requires-dotnet8.exe` | 8MB | יש לך [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0), או שלא אכפת לך להתקין. |
+
+כך או כך זה **קובץ אחד**. שים אותו על שולחן העבודה, על דיסק און קי או ישר ב‑`C:\` — הוא לא כותב
+כלום לידו. החלפת exe קיים מגרסה 2.x בזה שומרת את כל ההגדרות.
+
+### דרישות
+
+Windows 10 (1809) או 11, 64 ביט.
 
 ### ועוד
 
